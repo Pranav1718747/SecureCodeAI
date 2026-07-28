@@ -348,8 +348,8 @@ to sign up at https://www.firecrawl.dev/signin.
 
 ## Session-specific auth
 
-Use this API key for this onboarding session:
+Set your API key in the environment or `.env` file:
 
 ```dotenv
-FIRECRAWL_API_KEY=fc-3b84a0b439724ffeb5d6c38d2b31c2dc
+FIRECRAWL_API_KEY=your_firecrawl_api_key_here
 ```
