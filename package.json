@@ -1,0 +1,18 @@
+{
+  "name": "securecodeai-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root workspace configuration for SecureCodeAI platform",
+  "scripts": {
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:preview": "npm --prefix frontend run preview",
+    "test:frontend": "npm --prefix frontend test",
+    "setup": "bash scripts/setup.sh",
+    "docker:up": "docker-compose -f docker/docker-compose.yml up --build",
+    "docker:down": "docker-compose -f docker/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  }
+}

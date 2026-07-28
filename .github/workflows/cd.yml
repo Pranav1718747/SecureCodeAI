@@ -1,0 +1,15 @@
+name: SecureCodeAI CD Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to AWS ECS
+        run: |
+          echo "Triggering AWS ECS deployment..."
