@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: securecodeai_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-securecodeai_db}
+      POSTGRES_USER: ${POSTGRES_USER:-securecodeai_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-securecodeai_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: securecodeai_redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    container_name: securecodeai_backend
+    command: python backend/manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ../backend:/app/backend
+      - ../ai:/app/ai
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=postgres
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+
+  celery_worker:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    container_name: securecodeai_celery
+    command: celery -A backend.config worker -l info
+    volumes:
+      - ../backend:/app/backend
+      - ../ai:/app/ai
+    depends_on:
+      - backend
+      - redis
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+    container_name: securecodeai_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
