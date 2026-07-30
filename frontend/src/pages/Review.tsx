@@ -18,6 +18,7 @@ import { AIAnalysisTab } from '../components/workspace/tabs/AIAnalysisTab';
 import { VulnerableCodeTab } from '../components/workspace/tabs/VulnerableCodeTab';
 import { AIPatchTab } from '../components/workspace/tabs/AIPatchTab';
 import { ValidationTab } from '../components/workspace/tabs/ValidationTab';
+import { PullRequestTab } from '../components/workspace/tabs/PullRequestTab';
 
 export const ReviewPage = () => {
   const { scanId } = useParams<{ scanId: string }>();
@@ -84,9 +85,11 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
   const [patches, setPatches] = useState<Record<string, Patch>>({});
   const [activeTab, setActiveTab] = useState<TabType>('analysis');
 
-  // New state for patch generation
   const [isGeneratingPatch, setIsGeneratingPatch] = useState(false);
-  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [generationError, setGenerationError] = useState<any | null>(null);
+
+  // PR generation state
+  const [isCreatingPR, setIsCreatingPR] = useState(false);
 
   useEffect(() => {
     if (scan?.status === 'COMPLETED' || scan?.status === 'FAILED') {
@@ -109,6 +112,7 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
 
   const repoId = scan.repository || 'unknown';
   const patch = selectedVuln ? patches[selectedVuln.id] : null;
+  const prData = patch?.pr_preview_data || (patch?.status === 'PR_PREVIEW' && patch?.ai_response_json);
 
   const handleGeneratePatch = async () => {
     if (!selectedVuln) return;
@@ -123,11 +127,33 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
         [selectedVuln.id]: generatedPatch
       }));
     } catch (err: any) {
-      // Backend handles fallback, so if we reach this catch block it means
-      // complete network failure or 500 error from a bug (not an AI failure).
       setGenerationError(err.response?.data?.error || err.message || 'Network error while generating patch');
     } finally {
       setIsGeneratingPatch(false);
+    }
+  };
+
+  const handleCreatePR = async () => {
+    if (!patch) return;
+    setIsCreatingPR(true);
+    setGenerationError(null);
+    try {
+      const previewData = await patchService.createPRPreview(patch.id);
+      setPatches(prev => ({
+        ...prev,
+        [patch.vulnerability]: {
+          ...patch,
+          status: 'PR_OPENED',
+          pr_preview_data: previewData,
+          pr_url: previewData.pr_url,
+          pr_number: previewData.pr_number
+        }
+      }));
+      setIsCreatingPR(false);
+      setActiveTab('pr');
+    } catch (err: any) {
+      setIsCreatingPR(false);
+      setGenerationError(err.response?.data || err.message || 'Failed to create Pull Request');
     }
   };
 
@@ -164,6 +190,7 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
                 activeTab={activeTab} 
                 onTabChange={setActiveTab}
                 hasPatch={!!patch}
+                hasPR={!!prData}
               />
               
               <div className="flex-1 overflow-y-auto">
@@ -175,9 +202,12 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
                     isGenerating={isGeneratingPatch}
                     onGenerate={handleGeneratePatch}
                     error={generationError}
+                    isCreatingPR={isCreatingPR}
+                    onCreatePR={handleCreatePR}
                   />
                 )}
                 {activeTab === 'validation' && patch && <ValidationTab vuln={selectedVuln} patch={patch} />}
+                {activeTab === 'pr' && prData && <PullRequestTab prData={prData} />}
               </div>
             </>
           ) : (

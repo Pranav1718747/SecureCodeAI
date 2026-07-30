@@ -17,6 +17,7 @@ class Patch(TimeStampedModel):
             ('GENERATED', 'Generated'),
             ('VERIFYING', 'Verifying'),
             ('VERIFIED', 'Verified'),
+            ('PR_PREVIEW', 'PR Preview'),
             ('PR_OPENED', 'PR Opened'),
             ('ACCEPTED', 'Accepted'),
             ('REJECTED', 'Rejected')
@@ -24,6 +25,11 @@ class Patch(TimeStampedModel):
     )
     pull_request_url = models.URLField(max_length=500, null=True, blank=True)
     ai_response_json = models.JSONField(null=True, blank=True)
+    
+    # Git Integration Fields
+    branch_name = models.CharField(max_length=255, null=True, blank=True)
+    commit_sha = models.CharField(max_length=40, null=True, blank=True)
+    pr_preview_data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return f"Patch for {self.vulnerability.title} ({self.status})"

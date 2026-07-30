@@ -79,5 +79,10 @@ export const patchService = {
     
     // Legacy support
     return data;
+  },
+
+  createPRPreview: async (patchId: string): Promise<any> => {
+    const response = await api.post(`/patches/${patchId}/create_pr_preview/`);
+    return response.data;
   }
 };

@@ -1,5 +1,5 @@
 import { Patch } from '../../../types/scan';
-import { GitCommit, Download, Copy, AlertTriangle, Wand2, Loader2, CheckCircle2, Clock, Shield } from 'lucide-react';
+import { GitCommit, Download, Copy, AlertTriangle, Wand2, Loader2, CheckCircle2, Clock, Shield, GitPullRequest } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -7,12 +7,29 @@ interface AIPatchTabProps {
   patch: Patch | null;
   isGenerating: boolean;
   onGenerate: () => void;
-  error: string | null;
+  error: any | null;
+  onCreatePR?: () => void;
+  isCreatingPR?: boolean;
 }
 
-export const AIPatchTab = ({ patch, isGenerating, onGenerate, error }: AIPatchTabProps) => {
+export const AIPatchTab = ({ patch, isGenerating, onGenerate, error, onCreatePR, isCreatingPR }: AIPatchTabProps) => {
   const [viewMode, setViewMode] = useState<'unified' | 'split'>('unified');
   const [generationStage, setGenerationStage] = useState(0);
+  const [prStage, setPrStage] = useState(0);
+
+  // Mock progress stages for PR Creation
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isCreatingPR) {
+      setPrStage(0);
+      interval = setInterval(() => {
+        setPrStage(prev => Math.min(prev + 1, 5));
+      }, 1500);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isCreatingPR]);
 
   // Mock progress stages during generation
   useEffect(() => {
@@ -138,6 +155,133 @@ export const AIPatchTab = ({ patch, isGenerating, onGenerate, error }: AIPatchTa
               );
             })}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // PR Creation State
+  const isStringError = typeof error === 'string';
+  const isObjectError = error && typeof error === 'object';
+  const hasPrError = error && (
+    (isStringError && (error.includes('create Pull Request') || error.includes('push branch') || error.includes('Failed to'))) ||
+    isObjectError
+  );
+
+  if (isCreatingPR || (patch && hasPrError)) {
+    const prStages = [
+      "Repository cloned",
+      "Patch generated",
+      "Patch validated",
+      "Git branch created",
+      "Commit created",
+      "Pull Request prepared"
+    ];
+
+    const errorTitle = isObjectError ? (error.category || 'PR Creation Failed') : 'PR Creation Failed';
+    const errorMsg = isObjectError ? (error.human_message || error.reason) : error;
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-[#0d1117] p-8 overflow-y-auto">
+        <div className="max-w-xl w-full bg-[#161b22] border border-[#30363d] rounded-xl p-8">
+          <div className="flex items-center gap-4 mb-8">
+            {error ? (
+              <AlertTriangle className="h-8 w-8 text-rose-500 shrink-0" />
+            ) : (
+              <Loader2 className="h-8 w-8 text-blue-400 animate-spin shrink-0" />
+            )}
+            <div>
+              <h2 className={`text-lg font-bold ${error ? 'text-rose-500' : 'text-[#c9d1d9]'}`}>
+                {error ? errorTitle : 'Preparing Pull Request...'}
+              </h2>
+              <div className={`text-xs ${error ? 'text-rose-400' : 'text-[#8b949e]'} flex items-center gap-1 mt-1`}>
+                {errorMsg || 'Applying secure patch to remote repository'}
+              </div>
+            </div>
+          </div>
+          
+          {!error && (
+            <div className="space-y-4 mb-8">
+              {prStages.map((stage, idx) => {
+                const isPast = idx < prStage;
+                const isCurrent = idx === prStage;
+                
+                return (
+                  <div key={idx} className={`flex items-center gap-3 text-sm transition-all duration-500 ${
+                    isPast ? 'text-emerald-400 opacity-100' : 
+                    isCurrent ? 'text-blue-400 opacity-100 translate-x-2' : 
+                    'text-[#8b949e] opacity-50'
+                  }`}>
+                    {isPast ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : isCurrent ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border border-[#30363d]" />
+                    )}
+                    <span className={isCurrent ? 'font-medium' : ''}>{stage}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {isObjectError && (
+            <div className="mt-6 space-y-4 text-left">
+              <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-semibold text-[#8b949e] uppercase tracking-wider">Failed Stage</span>
+                  <span className="text-xs font-mono text-rose-400 bg-rose-400/10 px-2 py-0.5 rounded">{error.stage}</span>
+                </div>
+                
+                {error.command && (
+                  <div className="mt-4">
+                    <span className="text-xs font-semibold text-[#8b949e] uppercase tracking-wider block mb-2">Command</span>
+                    <pre className="text-xs font-mono text-[#c9d1d9] bg-[#161b22] p-3 rounded-md overflow-x-auto border border-[#30363d]">
+                      {error.command}
+                    </pre>
+                  </div>
+                )}
+
+                {error.stderr && (
+                  <div className="mt-4">
+                    <span className="text-xs font-semibold text-[#8b949e] uppercase tracking-wider block mb-2">Error Output</span>
+                    <pre className="text-xs font-mono text-rose-400 bg-[#161b22] p-3 rounded-md overflow-x-auto border border-[#30363d]">
+                      {error.stderr}
+                    </pre>
+                  </div>
+                )}
+                
+                {error.possible_fixes && error.possible_fixes.length > 0 && (
+                  <div className="mt-4">
+                    <span className="text-xs font-semibold text-[#8b949e] uppercase tracking-wider block mb-2">Suggested Fixes</span>
+                    <ul className="list-disc list-inside text-sm text-[#c9d1d9] space-y-1">
+                      {error.possible_fixes.map((fix: string, idx: number) => (
+                        <li key={idx}>{fix}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {error && (
+            <div className="mt-8 flex justify-end gap-3 border-t border-[#30363d] pt-6">
+              <button 
+                onClick={onGenerate}
+                className="px-4 py-2 text-sm font-medium text-[#c9d1d9] bg-[#21262d] border border-[#30363d] hover:bg-[#30363d] rounded-lg transition-colors"
+              >
+                Back to Patch
+              </button>
+              <button 
+                onClick={onCreatePR}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              >
+                Retry Request
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -386,6 +530,24 @@ export const AIPatchTab = ({ patch, isGenerating, onGenerate, error }: AIPatchTa
           </div>
         </div>
       )}
+
+      {/* Action Footer */}
+      <div className="p-4 bg-[#161b22] border-t border-[#30363d] flex justify-end gap-3 shrink-0 mt-auto">
+        <button 
+          onClick={onGenerate}
+          className="px-4 py-2 text-sm font-medium text-[#c9d1d9] bg-[#21262d] border border-[#30363d] hover:bg-[#30363d] rounded-lg transition-colors"
+        >
+          Discard Patch
+        </button>
+        <button 
+          onClick={onCreatePR}
+          disabled={patch.status === 'REJECTED' || isCreatingPR}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm"
+        >
+          <GitPullRequest className="h-4 w-4" />
+          Create Pull Request
+        </button>
+      </div>
     </div>
   );
 };

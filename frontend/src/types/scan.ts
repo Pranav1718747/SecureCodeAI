@@ -67,8 +67,13 @@ export interface Patch {
   vulnerability: string; // ID
   diff_content: string;
   explanation: string;
-  status: 'GENERATED' | 'VERIFYING' | 'VERIFIED' | 'PR_OPENED' | 'ACCEPTED' | 'REJECTED';
+  status: 'GENERATED' | 'VERIFYING' | 'VERIFIED' | 'PR_PREVIEW' | 'PR_OPENED' | 'ACCEPTED' | 'REJECTED';
   ai_response_json?: AIPatchResponse;
+  pr_preview_data?: any;
+  branch_name?: string;
+  commit_sha?: string;
+  pr_number?: number;
+  pr_url?: string;
   created_at: string;
 }
 
@@ -79,4 +84,19 @@ export interface AnalysisReport {
   secure_example: string;
   attack_scenario: string;
   fallback_fix: FallbackFix;
+}
+
+export interface GitCommandError {
+  success: boolean;
+  stage: string;
+  command: string;
+  stdout: string;
+  stderr: string;
+  exit_code: number;
+  duration_ms: number;
+  category: string;
+  reason: string;
+  human_message: string;
+  possible_fixes: string[];
+  error?: string; // Fallback for unknown errors
 }

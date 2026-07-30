@@ -11,8 +11,41 @@ from django.http import JsonResponse
 
 
 def health_check(request):
-    """Simple health check endpoint."""
     return JsonResponse({"status": "healthy"})
+
+def debug_github(request):
+    from config.env import settings, ENV_PATH
+    import requests
+    
+    token = settings.github_token
+    token_prefix = f"{token[:4]}{'*' * (len(token)-4)}" if token and len(token) > 4 else None
+    
+    github_authenticated = False
+    username = None
+    if token:
+        try:
+            response = requests.get(
+                "https://api.github.com/user",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/vnd.github.v3+json"
+                },
+                timeout=5
+            )
+            if response.status_code == 200:
+                github_authenticated = True
+                username = response.json().get('login')
+        except:
+            pass
+
+    return JsonResponse({
+        "env_loaded": ENV_PATH.exists(),
+        "token_found": bool(token),
+        "token_prefix": token_prefix,
+        "github_authenticated": github_authenticated,
+        "username": username,
+        "repo_access": github_authenticated  # simplifying for this debug endpoint
+    })
 
 
 urlpatterns = [
@@ -24,6 +57,7 @@ urlpatterns = [
     
     # Health check
     path("api/v1/health/", health_check, name="health-check"),
+    path("api/debug/github", debug_github, name="debug-github"),
     
     # Domain Apps
     path("api/v1/accounts/", include("accounts.urls")),

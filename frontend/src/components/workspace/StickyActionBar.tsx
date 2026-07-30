@@ -1,4 +1,4 @@
-import { GitPullRequest, ShieldCheck, Download, Share, X, Wand2, Loader2 } from 'lucide-react';
+import { GitPullRequest, Download, Share, X, Wand2, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface StickyActionBarProps {
@@ -52,16 +52,13 @@ export const StickyActionBar = ({ scanId, repoId, hasPatch, isGeneratingPatch, o
 
         {/* Existing Actions (only show if patch exists for context) */}
         {hasPatch && (
-          <>
-            <button className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm">
-              <GitPullRequest className="h-3.5 w-3.5" />
-              Create PR
-            </button>
-            <button className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors shadow-sm">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Approve & Apply
-            </button>
-          </>
+          <button 
+            disabled
+            className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-blue-600/50 cursor-not-allowed rounded-md transition-colors shadow-sm"
+          >
+            <GitPullRequest className="h-3.5 w-3.5" />
+            Patch Ready
+          </button>
         )}
       </div>
     </div>

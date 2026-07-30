@@ -30,6 +30,48 @@ class PatchViewSet(viewsets.ModelViewSet):
             "opened_at": patch.updated_at
         }, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['post'])
+    def create_pr_preview(self, request, pk=None):
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info("[PR] Request received")
+        from .remediation_services import PatchApplicationService, PullRequestPreviewService, GitCommandError
+        patch = self.get_object()
+        
+        try:
+            # 1. Apply Patch & Git Operations locally
+            PatchApplicationService.apply_patch(patch, logger=logger)
+            
+            # 2. Generate PR Preview
+            preview_data = PullRequestPreviewService.generate_preview(patch, logger=logger)
+            
+            logger.info("[PR] Returning preview")
+            return Response(preview_data, status=status.HTTP_200_OK)
+        except GitCommandError as e:
+            logger.error(f"[PR] Error in stage {e.stage}: {e.human_message}")
+            return Response({
+                "success": False,
+                "stage": e.stage,
+                "command": e.result.command,
+                "stdout": e.result.stdout,
+                "stderr": e.result.stderr,
+                "exit_code": e.result.exit_code,
+                "duration_ms": e.result.duration_ms,
+                "category": e.category,
+                "reason": e.reason,
+                "human_message": e.human_message,
+                "possible_fixes": e.possible_fixes
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            logger.error(f"[PR] Unknown error: {str(e)}")
+            return Response({
+                "success": False,
+                "stage": "unknown",
+                "error": str(e),
+                "human_message": "An unexpected server error occurred."
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=False, methods=['post'])
     def generate(self, request):
         from reviews.models import Vulnerability

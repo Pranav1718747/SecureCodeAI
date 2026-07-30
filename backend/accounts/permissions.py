@@ -25,6 +25,8 @@ class IsOrgMember(BasePermission):
             return obj.repository.organization == request.user.organization
         elif hasattr(obj, 'scan'):
             return obj.scan.repository.organization == request.user.organization
+        elif hasattr(obj, 'vulnerability'):
+            return obj.vulnerability.scan.repository.organization == request.user.organization
         return False
 
 

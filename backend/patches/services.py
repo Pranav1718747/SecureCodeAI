@@ -111,7 +111,8 @@ class GitPatchService:
         from github import Github
         from github.GithubException import GithubException
 
-        token = os.getenv('GITHUB_PAT')
+        from config.env import settings
+        token = settings.github_token
         if not token:
             # Fallback for dev environment without token
             pr_url = f"https://github.com/{patch.vulnerability.scan.repository.full_name}/pull/dummy"
