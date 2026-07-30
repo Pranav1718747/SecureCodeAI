@@ -21,7 +21,7 @@ class PlannerAgent(BaseAgent):
 
     def __init__(
         self,
-        model_id: str = "anthropic.claude-3-haiku-20240307-v1:0",
+        model_id: str = "llama-3.3-70b-versatile",
         temperature: float = 0.0,
         region_name: str = "us-east-1",
     ) -> None:

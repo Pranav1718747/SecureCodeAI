@@ -1,0 +1,15 @@
+meta {
+  name: 20 Get Evaluations
+  type: http
+  seq: 20
+}
+
+get {
+  url: http://127.0.0.1:8000/api/v1/evaluation/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}

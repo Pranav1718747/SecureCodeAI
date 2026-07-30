@@ -1,7 +1,5 @@
-"""Tests for Training app."""
-
 from django.test import TestCase
 
-class StubTest(TestCase):
-    def test_stub(self):
+class TrainingTestCase(TestCase):
+    def test_basic_functionality(self):
         self.assertTrue(True)

@@ -26,3 +26,10 @@ class ScanStatusConsumer(AsyncWebsocketConsumer):
             'type': 'scan_update',
             'data': event['data']
         }))
+        
+    async def agent_update(self, event):
+        """Receive agent flow updates (e.g. Heuristic -> Critic -> Patch)"""
+        await self.send(text_data=json.dumps({
+            'type': 'agent_update',
+            'data': event['data']
+        }))

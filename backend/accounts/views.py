@@ -4,6 +4,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import Organization, User, APIKey
 from .serializers import (
@@ -85,3 +86,10 @@ class APIKeyViewSet(viewsets.ModelViewSet):
         api_key.is_revoked = True
         api_key.save()
         return Response({"status": "revoked"})
+
+class CurrentUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)

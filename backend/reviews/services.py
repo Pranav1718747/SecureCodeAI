@@ -38,20 +38,55 @@ class ScanOrchestrationService:
         scan.save()
         
         try:
+            import tempfile
+            import subprocess
+            import os
             from ai.agents.orchestrator import ScanOrchestrator
             from ai.agents.state import WorkflowState
             
             repo_url = scan.repository.clone_url or "local://stub"
             branch = scan.branch_name or scan.repository.default_branch
             
+            # Temporary directory for cloning
+            temp_dir_obj = tempfile.TemporaryDirectory()
+            local_repo_path = temp_dir_obj.name
+            
+            # Clone the repository
+            if repo_url.startswith("http"):
+                logger.info("execute_scan.cloning", repo_url=repo_url, path=local_repo_path)
+                subprocess.run(
+                    ["git", "clone", "--depth", "1", "--branch", branch, repo_url, local_repo_path],
+                    check=True,
+                    capture_output=True
+                )
+            
+            # Generate file tree (filtering out .git and pycache)
+            file_tree = []
+            for root, dirs, files in os.walk(local_repo_path):
+                if ".git" in dirs: dirs.remove(".git")
+                if "__pycache__" in dirs: dirs.remove("__pycache__")
+                if "node_modules" in dirs: dirs.remove("node_modules")
+                
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    rel_path = os.path.relpath(full_path, local_repo_path)
+                    file_tree.append(rel_path)
+            
+            logger.info("execute_scan.file_tree_generated", file_count=len(file_tree))
+            
             state = WorkflowState(
                 repository_id=scan.repository.id,
                 repository_url=repo_url,
-                branch=branch
+                local_repo_path=local_repo_path,
+                branch=branch,
+                file_tree=file_tree
             )
             
             orchestrator = ScanOrchestrator()
             final_state = orchestrator.run_scan(state)
+            
+            # Cleanup
+            temp_dir_obj.cleanup()
             
             vulnerabilities = []
             for finding in final_state.findings:

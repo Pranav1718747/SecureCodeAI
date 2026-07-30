@@ -1,0 +1,15 @@
+meta {
+  name: 15 Get Verification Runs
+  type: http
+  seq: 15
+}
+
+get {
+  url: http://127.0.0.1:8000/api/v1/verification/runs/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}

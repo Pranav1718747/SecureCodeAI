@@ -6,5 +6,4 @@ from .services import TrainingPipelineService
 @shared_task
 def poll_sagemaker_jobs():
     """Periodic task to poll and update running SageMaker jobs."""
-    # TrainingPipelineService.poll_job_status(...)
-    pass
+    TrainingPipelineService.poll_job_status()

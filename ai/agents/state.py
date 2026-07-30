@@ -31,6 +31,7 @@ class WorkflowState(BaseModel):
 
     repository_id: UUID
     repository_url: str = ""
+    local_repo_path: str = ""
     branch: str = "main"
     file_tree: list[str] = Field(default_factory=list)
     scan_plan: Optional[Any] = None

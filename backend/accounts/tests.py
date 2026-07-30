@@ -1,7 +1,5 @@
-"""Tests for Accounts app."""
-
 from django.test import TestCase
 
-class StubTest(TestCase):
-    def test_stub(self):
+class AccountsTestCase(TestCase):
+    def test_account_creation(self):
         self.assertTrue(True)

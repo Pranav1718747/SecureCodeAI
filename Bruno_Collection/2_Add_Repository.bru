@@ -1,0 +1,30 @@
+meta {
+  name: 2. Add Repository
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://127.0.0.1:8000/api/v1/repositories/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "name": "cricket-simulator",
+    "full_name": "Pranav1718747/cricket-simulator",
+    "clone_url": "https://github.com/Pranav1718747/cricket-simulator.git",
+    "default_branch": "main",
+    "is_private": false,
+    "language": "python"
+  }
+}
+
+vars:post-response {
+  repo_id: res.body.id
+}

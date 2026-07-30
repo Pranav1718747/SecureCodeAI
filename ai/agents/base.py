@@ -30,36 +30,37 @@ class BaseAgent(ABC):
 
     def __init__(
         self,
-        model_id: str = "anthropic.claude-3-5-sonnet-20240620-v1:0",
+        model_id: str = "llama-3.3-70b-versatile",
         temperature: float = 0.0,
-        region_name: str = "us-east-1",
+        region_name: str = "us-east-1",  # Kept for backward compatibility
         max_tokens: int = 4096,
     ) -> None:
-        """Initialize BaseAgent with Bedrock parameters.
+        """Initialize BaseAgent with Groq parameters.
 
         Args:
-            model_id: AWS Bedrock model identifier.
+            model_id: Groq model identifier.
             temperature: Sampling temperature (0.0 for deterministic reasoning).
-            region_name: AWS region for Bedrock service.
+            region_name: Kept for compatibility.
             max_tokens: Maximum tokens in response.
         """
         self.model_id = model_id
         self.temperature = temperature
-        self.region_name = region_name
         self.max_tokens = max_tokens
-        self._bedrock_client: Any = None
+        self._groq_client: Any = None
 
     @property
     def client(self) -> Any:
-        """Lazy load boto3 Bedrock Runtime client."""
-        if self._bedrock_client is None:
-            import boto3
-
-            self._bedrock_client = boto3.client(
-                service_name="bedrock-runtime",
-                region_name=self.region_name,
-            )
-        return self._bedrock_client
+        """Lazy load Groq client."""
+        if self._groq_client is None:
+            import os
+            from groq import Groq
+            
+            api_key = os.environ.get("GROQ_API_KEY")
+            if not api_key:
+                raise ValueError("GROQ_API_KEY environment variable is missing.")
+                
+            self._groq_client = Groq(api_key=api_key)
+        return self._groq_client
 
     def invoke(
         self,
@@ -89,41 +90,37 @@ class BaseAgent(ABC):
         )
         log.info("agent_invocation.started")
 
-        body = json.dumps({
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": self.max_tokens,
-            "temperature": self.temperature,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-        })
-
         delay = 1.0
         last_exception: Optional[Exception] = None
 
         for attempt in range(1, max_retries + 1):
             try:
-                response = self.client.invoke_model(
-                    modelId=self.model_id,
-                    contentType="application/json",
-                    accept="application/json",
-                    body=body,
+                import json
+                schema_dict = response_schema.model_json_schema()
+                schema_str = json.dumps(schema_dict, indent=2)
+                enriched_prompt = f"{prompt}\n\nYou MUST return a valid JSON object matching this JSON Schema exactly:\n{schema_str}"
+
+                # Tell Groq we want JSON output if it's supported, else instruct it
+                response = self.client.chat.completions.create(
+                    model=self.model_id,
+                    messages=[
+                        {"role": "user", "content": enriched_prompt}
+                    ],
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    response_format={"type": "json_object"}
                 )
 
-                response_body = json.loads(response.get("body").read().decode("utf-8"))
-                completion_text = (
-                    response_body.get("content", [{}])[0].get("text", "")
-                )
+                completion_text = response.choices[0].message.content
 
                 parsed_result = self._parse_response(
                     completion_text, response_schema
                 )
 
-                input_tokens = response_body.get("usage", {}).get("input_tokens", 0)
-                output_tokens = response_body.get("usage", {}).get("output_tokens", 0)
+                # Assuming usage metrics exist on groq response object
+                usage = getattr(response, 'usage', None)
+                input_tokens = usage.prompt_tokens if usage else 0
+                output_tokens = usage.completion_tokens if usage else 0
 
                 log.info(
                     "agent_invocation.completed",
@@ -135,8 +132,7 @@ class BaseAgent(ABC):
 
             except Exception as e:
                 last_exception = e
-                is_boto_err = e.__class__.__name__ in ("BotoCoreError", "ClientError")
-                log_event = "agent_invocation.api_error" if is_boto_err else "agent_invocation.error"
+                log_event = "agent_invocation.error"
                 log.warning(
                     log_event,
                     attempt=attempt,

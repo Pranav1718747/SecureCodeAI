@@ -1,0 +1,19 @@
+meta {
+  name: 5. Get Vulnerabilities
+  type: http
+  seq: 5
+}
+
+get {
+  url: http://127.0.0.1:8000/api/v1/reviews/vulnerabilities/?scan_id={{scan_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+vars:post-response {
+  vuln_id: res.body.results[0].id
+}

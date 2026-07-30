@@ -20,7 +20,34 @@ class AuditLoggingMiddleware(MiddlewareMixin):
     """
     def process_response(self, request, response):
         if request.method not in ('GET', 'HEAD', 'OPTIONS'):
-            # This is a stub for the actual audit logger which will be implemented in Phase 9
-            # to avoid circular dependencies early on.
-            pass
+            if hasattr(request, 'user') and request.user.is_authenticated:
+                from monitoring.services import AuditLoggerService
+                try:
+                    payload = None
+                    if request.body:
+                        try:
+                            payload = json.loads(request.body)
+                        except json.JSONDecodeError:
+                            pass
+
+                    # Avoid logging login/token requests with raw passwords
+                    if 'password' in (payload or {}):
+                        payload['password'] = '***'
+                    
+                    # Log the request
+                    org = request.user.organization
+                    ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
+                    AuditLoggerService.log_event(
+                        org=org,
+                        actor=request.user,
+                        ip=ip,
+                        action=f"{request.method} {request.path}",
+                        resource_type="API_ENDPOINT",
+                        resource_id=request.path,
+                        payload=payload
+                    )
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f"Failed to log audit event: {e}")
+                    
         return response

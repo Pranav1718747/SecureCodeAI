@@ -30,7 +30,8 @@ SECURITY_RULES: list[dict] = [
         "name": "Hardcoded Credentials",
         "owasp": OWASPCategory.A07_AUTHENTICATION_FAILURES,
         "severity": SeverityLevel.CRITICAL,
-        "pattern": r"(password|secret|api_key|access_token|aws_secret_key)\s*=\s*[\"'][A-Za-z0-9_\-]{8,}[\"']",
+        # Lenient regex to catch SECRET_KEY = '...' and os.environ.get('SECRET_KEY', 'django-insecure-...')
+        "pattern": r"(password|secret|api_key|access_token|aws_secret_key).*=.*[\"'].{8,}[\"']",
         "description": "Hardcoded secret or credential token detected in source code.",
         "explanation": "Storing plain-text secrets in repository files exposes them to unauthorized users and automated credential harvesters.",
     },

@@ -2,7 +2,7 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import OrganizationViewSet, UserViewSet, APIKeyViewSet, CustomTokenObtainPairView
+from .views import OrganizationViewSet, UserViewSet, APIKeyViewSet, CustomTokenObtainPairView, CurrentUserView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 router = DefaultRouter()
@@ -12,6 +12,7 @@ router.register(r'api-keys', APIKeyViewSet, basename='apikey')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('me/', CurrentUserView.as_view(), name='current_user'),
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

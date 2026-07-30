@@ -22,7 +22,7 @@ class CriticAgent(BaseAgent):
 
     def __init__(
         self,
-        model_id: str = "anthropic.claude-3-5-sonnet-20240620-v1:0",
+        model_id: str = "llama-3.3-70b-versatile",
         temperature: float = 0.0,
         region_name: str = "us-east-1",
     ) -> None:
@@ -43,7 +43,37 @@ class CriticAgent(BaseAgent):
             ValidationResult: Validation evaluation result.
         """
         logger.info("critic_agent.validate_finding.started", finding_id=str(finding.id))
-        result = validate_finding_rules(finding)
+        
+        # First use deterministic rules to quickly filter obvious false positives
+        rule_result = validate_finding_rules(finding)
+        if not rule_result.is_valid:
+            return rule_result
+
+        # If rules pass, use LLM to critically evaluate the finding
+        prompt = f"""You are a senior security critic. Evaluate the following vulnerability finding for false positives.
+        
+Finding Details:
+- Title: {finding.vulnerability_type}
+- Description: {finding.description}
+- Severity: {finding.severity.value}
+- Location: {finding.file_path}:{finding.line_number}
+
+Analyze the finding and determine if it is a true positive (valid) or a false positive (invalid).
+Output your response as JSON matching the following schema:
+{{
+    "is_valid": true/false,
+    "rejection_code": "FALSE_POSITIVE" or "INCOMPLETE_EXPLANATION" or null if valid,
+    "critic_notes": "Explanation of your reasoning"
+}}
+"""
+        try:
+            from ai.agents.base import AgentInvocationError
+            result = self.invoke(prompt=prompt, response_schema=ValidationResult)
+        except Exception as e:
+            logger.warning("critic_agent.validate_finding.llm_failed_falling_back", error=str(e))
+            # Fallback to rule result if LLM fails
+            result = rule_result
+
         logger.info(
             "critic_agent.validate_finding.completed",
             finding_id=str(finding.id),

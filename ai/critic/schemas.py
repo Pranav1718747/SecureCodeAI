@@ -1,6 +1,7 @@
 """Critic Agent Schemas and Quality Validation Models."""
 
 from enum import Enum
+from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, Field
 
@@ -30,6 +31,6 @@ class ValidationResult(BaseModel):
 
     finding_id: UUID
     is_valid: bool
-    rejection_code: RejectionCode = RejectionCode.NONE
+    rejection_code: Optional[RejectionCode] = RejectionCode.NONE
     rejection_reason: str = ""
     quality_score: QualityScore

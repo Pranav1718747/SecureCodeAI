@@ -21,7 +21,7 @@ class SecurityAgent(BaseAgent):
 
     def __init__(
         self,
-        model_id: str = "anthropic.claude-3-5-sonnet-20240620-v1:0",
+        model_id: str = "llama-3.3-70b-versatile",
         temperature: float = 0.0,
         region_name: str = "us-east-1",
         confidence_threshold: float = 0.3,
@@ -81,10 +81,17 @@ class SecurityAgent(BaseAgent):
             if state.scan_plan and hasattr(state.scan_plan, "batches"):
                 for batch in state.scan_plan.batches:
                     for file_path in batch.files:
-                        # In production flow, content is loaded from storage/cloned repo
-                        mock_content = f"# Mock content for {file_path}"
+                        import os
+                        full_path = os.path.join(state.local_repo_path, file_path)
+                        try:
+                            with open(full_path, "r", encoding="utf-8") as f:
+                                content = f.read()
+                        except Exception as e:
+                            logger.warning("security_agent.read_failed", file=file_path, error=str(e))
+                            continue
+                            
                         new_findings = self.analyze_file_content(
-                            file_path, mock_content
+                            file_path, content
                         )
                         all_findings.extend(new_findings)
 

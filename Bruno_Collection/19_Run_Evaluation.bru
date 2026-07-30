@@ -1,0 +1,19 @@
+meta {
+  name: 19 Run Evaluation
+  type: http
+  seq: 19
+}
+
+post {
+  url: http://127.0.0.1:8000/api/v1/evaluation/run/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {}
+}

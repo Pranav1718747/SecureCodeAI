@@ -25,7 +25,7 @@ class BenchmarkMetrics(BaseModel):
 class BenchmarkRunner(BaseAgent):
     """AI Component responsible for running and evaluating model benchmarks."""
 
-    def __init__(self, model_id: str = "anthropic.claude-3-5-sonnet-20240620-v1:0"):
+    def __init__(self, model_id: str = "llama-3.3-70b-versatile"):
         super().__init__(model_id=model_id, temperature=0.0)
 
     def run_benchmarks(self, model_id_to_evaluate: str, benchmark_name: str) -> BenchmarkMetrics:

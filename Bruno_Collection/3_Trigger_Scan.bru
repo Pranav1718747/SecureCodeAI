@@ -1,0 +1,26 @@
+meta {
+  name: 3. Trigger Scan
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://127.0.0.1:8000/api/v1/reviews/scans/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "repository": {{repo_id}},
+    "branch_name": "main"
+  }
+}
+
+vars:post-response {
+  scan_id: res.body.id
+}

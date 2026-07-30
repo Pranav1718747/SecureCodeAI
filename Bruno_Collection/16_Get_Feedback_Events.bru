@@ -1,0 +1,15 @@
+meta {
+  name: 16 Get Feedback Events
+  type: http
+  seq: 16
+}
+
+get {
+  url: http://127.0.0.1:8000/api/v1/training/feedback/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}

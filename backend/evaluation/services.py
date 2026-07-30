@@ -1,6 +1,7 @@
 """Services for Evaluation app."""
 
 from .models import ModelEvaluation
+from typing import List, Dict, Any
 
 class EvaluationService:
     @staticmethod
@@ -30,6 +31,28 @@ class EvaluationService:
         return evaluation
 
     @staticmethod
-    def compare_models(model_ids: list):
-        # Stub
-        pass
+    def compare_models(model_ids: List[str], benchmark_name: str) -> Dict[str, Any]:
+        """Compares multiple models on a given benchmark."""
+        evaluations = ModelEvaluation.objects.filter(
+            model_id__in=model_ids,
+            benchmark_name=benchmark_name,
+            status='COMPLETED'
+        ).order_by('-f1_score')
+        
+        results = {
+            'benchmark': benchmark_name,
+            'models_compared': len(model_ids),
+            'rankings': []
+        }
+        
+        for eval_obj in evaluations:
+            results['rankings'].append({
+                'model_id': eval_obj.model_id,
+                'f1_score': eval_obj.f1_score,
+                'precision': eval_obj.precision,
+                'recall': eval_obj.recall,
+                'pass_at_k': eval_obj.pass_at_k,
+                'evaluated_at': eval_obj.completed_at.isoformat() if eval_obj.completed_at else None
+            })
+            
+        return results

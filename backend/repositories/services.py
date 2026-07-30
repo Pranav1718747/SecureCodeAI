@@ -48,12 +48,29 @@ class RepositoryIngestionService:
         #     raise InvalidWebhookSignatureException()
             
         if event_type == 'push':
-            # create or update repo, trigger scan
-            pass
+            # In a real setup, we would parse the payload and create a scan
+            import logging
+            logging.getLogger(__name__).info("Webhook push event received.")
 
     @staticmethod
     def clone_repository(repo: Repository):
         """
         Clones a repository to a temporary directory for analysis.
         """
-        pass
+        import tempfile
+        import logging
+        import subprocess
+        logger = logging.getLogger(__name__)
+        temp_dir = tempfile.mkdtemp()
+        
+        if repo.clone_url:
+            logger.info(f"Cloning repository {repo.full_name} from {repo.clone_url} to {temp_dir}")
+            try:
+                subprocess.run(['git', 'clone', repo.clone_url, temp_dir], check=True, capture_output=True)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Git clone failed: {e.stderr.decode('utf-8')}")
+                raise
+        else:
+            logger.warning(f"No clone_url provided for {repo.full_name}, using empty temp directory.")
+            
+        return temp_dir

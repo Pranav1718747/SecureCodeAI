@@ -21,7 +21,7 @@ class PatchResponse(BaseModel):
 class PatchAgent(BaseAgent):
     """AI Agent responsible for generating security remediations."""
 
-    def __init__(self, model_id: str = "anthropic.claude-3-5-sonnet-20240620-v1:0"):
+    def __init__(self, model_id: str = "llama-3.3-70b-versatile"):
         super().__init__(model_id=model_id, temperature=0.1)
 
     def generate_patch(self, vulnerability_title: str, code_snippet: str, description: str) -> PatchResponse:

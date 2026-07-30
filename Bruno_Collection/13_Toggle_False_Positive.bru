@@ -1,0 +1,15 @@
+meta {
+  name: 13 Toggle False Positive
+  type: http
+  seq: 13
+}
+
+post {
+  url: http://127.0.0.1:8000/api/v1/reviews/vulnerabilities/1/toggle_false_positive/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}

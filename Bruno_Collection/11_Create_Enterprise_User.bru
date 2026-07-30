@@ -1,0 +1,19 @@
+meta {
+  name: 11 Create Enterprise User
+  type: http
+  seq: 11
+}
+
+post {
+  url: http://127.0.0.1:8000/api/v1/accounts/users/create_enterprise_user/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {}
+}

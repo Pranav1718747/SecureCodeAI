@@ -1,0 +1,21 @@
+meta {
+  name: 6. Generate Patch
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://127.0.0.1:8000/api/v1/patches/generate/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "vulnerability_id": {{vuln_id}}
+  }
+}

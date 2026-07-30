@@ -1,0 +1,15 @@
+meta {
+  name: 14 Apply PR
+  type: http
+  seq: 14
+}
+
+post {
+  url: http://127.0.0.1:8000/api/v1/patches/1/apply_pr/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}

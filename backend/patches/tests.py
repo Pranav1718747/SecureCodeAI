@@ -1,7 +1,5 @@
-"""Tests for Patches app."""
-
 from django.test import TestCase
 
-class StubTest(TestCase):
-    def test_stub(self):
+class PatchesTestCase(TestCase):
+    def test_basic_functionality(self):
         self.assertTrue(True)

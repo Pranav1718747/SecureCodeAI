@@ -1,0 +1,15 @@
+meta {
+  name: 12 Get Api Keys
+  type: http
+  seq: 12
+}
+
+get {
+  url: http://127.0.0.1:8000/api/v1/accounts/api-keys/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
