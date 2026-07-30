@@ -94,6 +94,25 @@ const scanSlice = createSlice({
       state.activeScan = null;
       state.vulnerabilities = [];
     },
+    appendVulnerabilities(state, action: PayloadAction<Vulnerability[]>) {
+      const existingIds = new Set(state.vulnerabilities.map(v => v.id));
+      const newVulns = action.payload.filter(v => !existingIds.has(v.id));
+      if (newVulns.length > 0) {
+        state.vulnerabilities = [...state.vulnerabilities, ...newVulns];
+      }
+    },
+    updateActiveScan(state, action: PayloadAction<Partial<Scan>>) {
+      if (state.activeScan) {
+        state.activeScan = { ...state.activeScan, ...action.payload };
+      }
+      // Also update in the list if it exists
+      if (action.payload.id) {
+        const index = state.scans.findIndex(s => s.id === action.payload.id);
+        if (index !== -1) {
+          state.scans[index] = { ...state.scans[index], ...action.payload };
+        }
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -121,5 +140,5 @@ const scanSlice = createSlice({
   },
 });
 
-export const { setActiveScan, setFilters, clearScans } = scanSlice.actions;
+export const { setActiveScan, setFilters, clearScans, appendVulnerabilities, updateActiveScan } = scanSlice.actions;
 export default scanSlice.reducer;

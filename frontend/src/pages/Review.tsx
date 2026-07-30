@@ -1,15 +1,22 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store';
+import { fetchScanDetail, fetchVulnerabilities, updateActiveScan, appendVulnerabilities } from '../store/scanSlice';
 import { scanService } from '../services/scanService';
 import { patchService } from '../services/patchService';
-import { Scan, Vulnerability, Patch } from '../types/scan';
+import { Vulnerability, Patch } from '../types/scan';
 import { ShieldAlert, ArrowLeft, Loader2, AlertCircle, Wand2, CheckCircle2, Clock, Folder, File, Activity, Zap, Search } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export const ReviewPage = () => {
   const { scanId } = useParams<{ scanId: string }>();
-  const [scan, setScan] = useState<Scan | null>(null);
-  const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Use Redux store as single source of truth
+  const scan = useSelector((state: RootState) => state.scans.activeScan);
+  const vulnerabilities = useSelector((state: RootState) => state.scans.vulnerabilities);
+  
   const [patches, setPatches] = useState<Record<string, Patch>>({});
   const [selectedVuln, setSelectedVuln] = useState<Vulnerability | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,6 +29,14 @@ export const ReviewPage = () => {
 
   useEffect(() => {
     if (scanId) {
+      // If we already have the scan in Redux, render instantly and don't block UI with loading spinner
+      if (scan && scan.id === scanId) {
+        setIsLoading(false);
+      } else {
+        setIsLoading(true);
+      }
+      
+      // Fetch fresh data in the background silently
       fetchData();
     }
   }, [scanId]);
@@ -62,10 +77,7 @@ export const ReviewPage = () => {
         }
         
         if (payload.type === 'new_vulnerability' && payload.vulnerability) {
-          setVulnerabilities(prev => {
-            if (prev.some(v => v.id === payload.vulnerability.id)) return prev;
-            return [...prev, payload.vulnerability];
-          });
+          dispatch(appendVulnerabilities([payload.vulnerability]));
           
           setSelectedVuln(prev => {
             if (!prev) return payload.vulnerability;
@@ -73,9 +85,22 @@ export const ReviewPage = () => {
           });
         }
         
+        // Handle batch vulnerability updates (optimized pipeline)
+        if (payload.type === 'batch_vulnerabilities' && payload.vulnerabilities) {
+          dispatch(appendVulnerabilities(payload.vulnerabilities));
+          
+          setSelectedVuln(prev => {
+            if (!prev && payload.vulnerabilities.length > 0) return payload.vulnerabilities[0];
+            return prev;
+          });
+        }
+        
         // Handle scan completion
         if (payload.status === 'COMPLETED' || payload.status === 'FAILED') {
-          fetchData(); // Fetch the final state
+          // Instantly update Redux so the UI transitions from Live Dashboard to Completed Review
+          dispatch(updateActiveScan({ status: payload.status }));
+          // Fetch the final comprehensive state silently
+          fetchData(); 
         }
       }
     };
@@ -83,23 +108,22 @@ export const ReviewPage = () => {
     return () => {
       ws.close();
     };
-  }, [scanId, scan?.status]);
+  }, [scanId, scan?.status, dispatch]);
 
   const fetchData = async () => {
     try {
-      setIsLoading(true);
       if (!scanId) return;
       
-      const [scanData, vulnsData] = await Promise.all([
-        scanService.getScan(scanId),
-        scanService.getVulnerabilities(scanId)
+      // We rely on Redux thunks to populate the shared state cache
+      await Promise.all([
+        dispatch(fetchScanDetail(scanId)),
+        dispatch(fetchVulnerabilities(scanId))
       ]);
       
-      setScan(scanData);
-      setVulnerabilities(vulnsData.results);
-      
+      // Local state specific to this view
+      const vulnsData = await scanService.getVulnerabilities(scanId);
       if (vulnsData.results.length > 0) {
-        setSelectedVuln(vulnsData.results[0]);
+        setSelectedVuln(prev => prev || vulnsData.results[0]);
         const patchesData = await patchService.getPatches();
         const patchesMap: Record<string, Patch> = {};
         patchesData.results.forEach(p => {
@@ -132,7 +156,7 @@ export const ReviewPage = () => {
     return <div className="flex justify-center h-64 items-center"><Loader2 className="h-8 w-8 text-blue-500 animate-spin" /></div>;
   }
 
-  if (!scan) return <div>Scan not found</div>;
+  if (!scan) return <div className="p-8 text-center text-slate-400">Scan not found</div>;
 
   const isLive = scan.status === 'IN_PROGRESS' || scan.status === 'QUEUED';
   

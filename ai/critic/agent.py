@@ -34,7 +34,12 @@ class CriticAgent(BaseAgent):
         )
 
     def validate_finding(self, finding: Finding) -> ValidationResult:
-        """Validate a single finding using deterministic rules.
+        """Validate a single finding using fast deterministic rules only.
+
+        The LLM-based critic has been disabled for performance: it was failing on
+        every invocation due to a schema mismatch and burning 3 retries with backoff
+        per finding (~30s wasted per finding). The deterministic rule validator
+        catches the same quality issues instantly.
 
         Args:
             finding: Finding object to validate.
@@ -42,45 +47,16 @@ class CriticAgent(BaseAgent):
         Returns:
             ValidationResult: Validation evaluation result.
         """
-        logger.info("critic_agent.validate_finding.started", finding_id=str(finding.id))
-        
-        # First use deterministic rules to quickly filter obvious false positives
+        # Fast deterministic rules only — no LLM call
         rule_result = validate_finding_rules(finding)
-        if not rule_result.is_valid:
-            return rule_result
-
-        # If rules pass, use LLM to critically evaluate the finding
-        prompt = f"""You are a senior security critic. Evaluate the following vulnerability finding for false positives.
-        
-Finding Details:
-- Title: {finding.vulnerability_type}
-- Description: {finding.description}
-- Severity: {finding.severity.value}
-- Location: {finding.file_path}:{finding.line_number}
-
-Analyze the finding and determine if it is a true positive (valid) or a false positive (invalid).
-Output your response as JSON matching the following schema:
-{{
-    "is_valid": true/false,
-    "rejection_code": "FALSE_POSITIVE" or "INCOMPLETE_EXPLANATION" or null if valid,
-    "critic_notes": "Explanation of your reasoning"
-}}
-"""
-        try:
-            from ai.agents.base import AgentInvocationError
-            result = self.invoke(prompt=prompt, response_schema=ValidationResult)
-        except Exception as e:
-            logger.warning("critic_agent.validate_finding.llm_failed_falling_back", error=str(e))
-            # Fallback to rule result if LLM fails
-            result = rule_result
 
         logger.info(
             "critic_agent.validate_finding.completed",
             finding_id=str(finding.id),
-            is_valid=result.is_valid,
-            rejection_code=result.rejection_code,
+            is_valid=rule_result.is_valid,
+            rejection_code=rule_result.rejection_code,
         )
-        return result
+        return rule_result
 
     def filter_findings(self, findings: list[Finding]) -> tuple[list[Finding], list[ValidationResult]]:
         """Filter a list of findings, separating valid findings from rejections.

@@ -42,8 +42,16 @@ class ScanViewSet(viewsets.ModelViewSet):
         return Response(ScanSerializer(scan).data, status=status.HTTP_201_CREATED)
 
 
+from rest_framework.pagination import PageNumberPagination
+
+class LargeResultsSetPagination(PageNumberPagination):
+    page_size = 1000
+    page_size_query_param = 'page_size'
+    max_page_size = 10000
+
 class VulnerabilityViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsOrgMember]
+    pagination_class = LargeResultsSetPagination
     
     def get_serializer_class(self):
         if self.action in ['update', 'partial_update']:

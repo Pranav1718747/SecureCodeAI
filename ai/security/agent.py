@@ -1,7 +1,8 @@
 """Security Agent Implementation.
 
 Performs OWASP Top 10 and CWE vulnerability analysis over code files using
-heuristic rule pattern matching and Claude 3.5 Sonnet LLM reasoning.
+heuristic rule pattern matching and LLM reasoning. Supports both single-file
+and batch multi-file analysis for performance.
 """
 
 from typing import Any, Optional
@@ -11,7 +12,7 @@ from ai.agents.base import BaseAgent
 from ai.agents.state import WorkflowState, AgentError
 from ai.security.schemas import Finding, SecurityAnalysisResult
 from ai.security.detectors import scan_file_heuristics
-from ai.prompts.security_prompts import SECURITY_SYSTEM_PROMPT
+from ai.prompts.security_prompts import SECURITY_SYSTEM_PROMPT, SECURITY_BATCH_PROMPT
 
 logger = structlog.get_logger(__name__)
 
@@ -79,6 +80,65 @@ class SecurityAgent(BaseAgent):
         logger.info(
             "security_agent.analyze_file.completed",
             file_path=file_path,
+            findings_count=len(valid_findings),
+        )
+        return valid_findings
+
+    def analyze_batch(
+        self, files: dict[str, str]
+    ) -> list[Finding]:
+        """Analyze multiple files in a single LLM request.
+
+        Args:
+            files: Dictionary mapping file_path -> source_code_content.
+
+        Returns:
+            list[Finding]: All findings from all files above confidence threshold.
+        """
+        if not files:
+            return []
+            
+        file_paths = list(files.keys())
+        logger.info("security_agent.analyze_batch.started", file_count=len(files), files=file_paths)
+
+        # 1. Run heuristic detectors on each file (fast, no LLM)
+        all_findings: list[Finding] = []
+        for file_path, content in files.items():
+            heuristic_findings = scan_file_heuristics(file_path, content)
+            all_findings.extend(heuristic_findings)
+
+        # 2. Build batched prompt with all files in XML blocks
+        files_block_parts = []
+        for file_path, content in files.items():
+            # Truncate very large files to avoid blowing up context
+            truncated = content[:8000] if len(content) > 8000 else content
+            files_block_parts.append(
+                f"<file path=\"{file_path}\">\n{truncated}\n</file>"
+            )
+        files_block = "\n\n".join(files_block_parts)
+
+        prompt = SECURITY_BATCH_PROMPT.format(files_block=files_block)
+
+        # 3. Single LLM call for the entire batch
+        try:
+            llm_result = self.invoke(prompt=prompt, response_schema=SecurityAnalysisResult)
+            if llm_result and hasattr(llm_result, "findings"):
+                all_findings.extend(llm_result.findings)
+        except Exception as e:
+            logger.warning(
+                "security_agent.analyze_batch.llm_failed",
+                file_count=len(files),
+                error=str(e)
+            )
+
+        # 4. Filter below confidence threshold
+        valid_findings = [
+            f for f in all_findings if f.confidence >= self.confidence_threshold
+        ]
+
+        logger.info(
+            "security_agent.analyze_batch.completed",
+            file_count=len(files),
             findings_count=len(valid_findings),
         )
         return valid_findings
