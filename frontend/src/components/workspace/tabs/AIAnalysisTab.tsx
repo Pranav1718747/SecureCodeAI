@@ -1,14 +1,85 @@
-import { Vulnerability } from '../../../types/scan';
-import { Target, AlertTriangle, Lightbulb, Shield, Code, Crosshair } from 'lucide-react';
+import { Vulnerability, AnalysisReport } from '../../../types/scan';
+import { Target, AlertTriangle, Lightbulb, Shield, Code, Crosshair, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import api from '../../../services/api';
 
 interface AIAnalysisTabProps {
   vuln: Vulnerability;
 }
 
 export const AIAnalysisTab = ({ vuln }: AIAnalysisTabProps) => {
+  const [report, setReport] = useState<AnalysisReport | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    
+    // In a real app we'd fetch this from the backend
+    // Since we added the /analysis/ endpoint, let's hit it
+    const fetchAnalysis = async () => {
+      try {
+        const res = await api.get(`/reviews/vulnerabilities/${vuln.id}/analysis/`);
+        
+        if (isMounted) {
+          setReport(res.data);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError('Failed to generate analysis.');
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    fetchAnalysis();
+    return () => { isMounted = false; };
+  }, [vuln.id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px] p-8">
+        <Loader2 className="h-8 w-8 text-blue-500 animate-spin mb-4" />
+        <h3 className="text-[#c9d1d9] font-medium mb-1">Generating Contextual Analysis</h3>
+        <p className="text-sm text-[#8b949e]">Analyzing repository, language, and vulnerability specifics...</p>
+      </div>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px] p-8 text-rose-400">
+        <AlertTriangle className="h-8 w-8 mb-4" />
+        <p>{error || 'Could not load report'}</p>
+      </div>
+    );
+  }
+
+  // Detect fallback
+  const isFallback = (report as any).success === false && (report as any).fallback_used;
+  const displayReport = isFallback ? (report as any).fallback_response : report;
+
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-4xl mx-auto custom-scrollbar pb-24">
+      {isFallback && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-start gap-3"
+        >
+          <AlertTriangle className="h-5 w-5 text-yellow-400 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-semibold text-yellow-400 mb-1">AI Service Unavailable</h4>
+            <p className="text-xs text-yellow-200/70">
+              {(report as any).reason || "The AI Security Engine is currently unavailable."} 
+              Displaying deterministic fallback analysis based on rule metadata.
+            </p>
+          </div>
+        </motion.div>
+      )}
       {/* Overview Block */}
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
@@ -21,10 +92,12 @@ export const AIAnalysisTab = ({ vuln }: AIAnalysisTabProps) => {
         </h2>
         <div className="prose prose-invert max-w-none text-slate-300">
           <p className="text-sm leading-relaxed">
-            The AI engine detected a potential <strong>{vuln.title}</strong> vulnerability 
+            The security engine detected a potential <strong>{vuln.title}</strong> vulnerability 
             in <code>{vuln.file_path}</code> at line {vuln.line_start}. 
-            This issue is classified as <span className="font-semibold text-rose-400">{vuln.severity}</span> severity 
-            because it allows an attacker to manipulate the underlying execution context.
+            This issue is classified as <span className="font-semibold text-rose-400">{vuln.severity}</span> severity.
+          </p>
+          <p className="text-sm leading-relaxed mt-2 text-slate-400">
+            {vuln.description}
           </p>
         </div>
       </motion.div>
@@ -42,16 +115,8 @@ export const AIAnalysisTab = ({ vuln }: AIAnalysisTabProps) => {
         </h3>
         <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1 h-full bg-orange-500" />
-          <p className="text-sm text-slate-300 leading-relaxed">
-            <strong>How an attacker exploits it:</strong>
-            <br/><br/>
-            1. The application accepts untrusted input from the user without sufficient sanitization.
-            <br/>
-            2. The attacker injects a malicious payload containing control characters or execution directives.
-            <br/>
-            3. The backend system parses the payload dynamically, causing the execution of unintended commands.
-            <br/>
-            4. The attacker achieves code execution or data exfiltration.
+          <p className="text-sm text-slate-300 leading-relaxed font-mono">
+            {displayReport.attack_scenario}
           </p>
         </div>
       </motion.div>
@@ -69,7 +134,7 @@ export const AIAnalysisTab = ({ vuln }: AIAnalysisTabProps) => {
             Business Impact
           </h3>
           <p className="text-sm text-slate-300 leading-relaxed">
-            Exploitation of this vulnerability could lead to complete system compromise, resulting in severe data breaches, regulatory fines, and permanent reputational damage.
+            {displayReport.business_impact}
           </p>
         </motion.div>
         
@@ -84,7 +149,7 @@ export const AIAnalysisTab = ({ vuln }: AIAnalysisTabProps) => {
             Compliance Impact
           </h3>
           <p className="text-sm text-slate-300 leading-relaxed">
-            Failure to remediate this issue violates SOC2 (CC6.1), PCI-DSS (Requirement 6.5), and GDPR guidelines regarding secure data processing.
+            {displayReport.compliance_impact}
           </p>
         </motion.div>
       </div>
@@ -101,17 +166,16 @@ export const AIAnalysisTab = ({ vuln }: AIAnalysisTabProps) => {
           Recommended Remediation
         </h3>
         <p className="text-sm text-slate-300 leading-relaxed mb-4">
-          Replace the dynamic execution block with a parameterized or strictly typed abstraction. Do not interpolate user input directly into executable contexts.
+          {displayReport.remediation}
         </p>
         
         <div className="bg-slate-950 rounded-lg p-4 border border-slate-800">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-500 font-mono">Secure Pattern Example</span>
+            <span className="text-xs text-slate-500 font-mono">Secure Pattern Example ({vuln.language})</span>
             <Code className="h-4 w-4 text-slate-600" />
           </div>
-          <pre className="text-sm text-emerald-400 font-mono">
-            {`// Use parameterized execution
-db.execute("SELECT * FROM users WHERE id = ?", [userInput]);`}
+          <pre className="text-sm text-emerald-400 font-mono whitespace-pre-wrap">
+            {displayReport.secure_example}
           </pre>
         </div>
       </motion.div>

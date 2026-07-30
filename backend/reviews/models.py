@@ -61,7 +61,11 @@ class Vulnerability(TimeStampedModel):
     line_start = models.IntegerField()
     line_end = models.IntegerField()
     snippet = models.TextField()
+    code_context = models.TextField(null=True, blank=True)
+    language = models.CharField(max_length=50, null=True, blank=True)
+    context_line_start = models.IntegerField(null=True, blank=True)
     is_false_positive = models.BooleanField(default=False)
+    analysis_report = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.severity} - {self.title} in {self.file_path}"

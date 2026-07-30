@@ -79,3 +79,36 @@ class VulnerabilityViewSet(viewsets.ModelViewSet):
         vuln = self.get_object()
         vuln = ScanOrchestrationService.mark_false_positive(vuln.id, request.user)
         return Response(VulnerabilitySerializer(vuln).data)
+
+    @action(detail=True, methods=['get'])
+    def analysis(self, request, pk=None):
+        vuln = self.get_object()
+        
+        if not vuln.analysis_report:
+            try:
+                from ai.security.agent import SecurityAgent
+                agent = SecurityAgent()
+                # SecurityAgent isn't initially designed for full report generation, but we will add generate_analysis to it.
+                report = agent.generate_analysis(vuln)
+                vuln.analysis_report = {
+                    "success": True,
+                    "summary": report.summary,
+                    "attack_scenario": report.attack_scenario,
+                    "business_impact": report.business_impact,
+                    "compliance_impact": report.compliance_impact,
+                    "remediation": report.remediation,
+                    "secure_example": report.secure_example,
+                    "confidence": report.confidence
+                }
+            except Exception as e:
+                from ai.security.report_generator import generate_full_report
+                fallback = generate_full_report(vuln)
+                vuln.analysis_report = {
+                    "success": False,
+                    "reason": str(e),
+                    "fallback_used": True,
+                    "fallback_response": fallback
+                }
+            vuln.save(update_fields=['analysis_report'])
+            
+        return Response(vuln.analysis_report)

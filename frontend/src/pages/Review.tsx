@@ -84,6 +84,10 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
   const [patches, setPatches] = useState<Record<string, Patch>>({});
   const [activeTab, setActiveTab] = useState<TabType>('analysis');
 
+  // New state for patch generation
+  const [isGeneratingPatch, setIsGeneratingPatch] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+
   useEffect(() => {
     if (scan?.status === 'COMPLETED' || scan?.status === 'FAILED') {
       scanService.getVulnerabilities(scanId).then(vulnsData => {
@@ -103,14 +107,37 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
 
   if (!scan) return null;
 
-  // Extract repo ID from scan (mocking it if necessary)
   const repoId = scan.repository || 'unknown';
-
   const patch = selectedVuln ? patches[selectedVuln.id] : null;
+
+  const handleGeneratePatch = async () => {
+    if (!selectedVuln) return;
+    setIsGeneratingPatch(true);
+    setGenerationError(null);
+    setActiveTab('patch'); // Switch to patch tab to show loading
+
+    try {
+      const generatedPatch = await patchService.generatePatch(selectedVuln.id);
+      setPatches(prev => ({
+        ...prev,
+        [selectedVuln.id]: generatedPatch
+      }));
+    } catch (err: any) {
+      setGenerationError(err.response?.data?.error || err.message || 'Failed to generate patch');
+    } finally {
+      setIsGeneratingPatch(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] bg-[#0a0f1c] overflow-hidden">
-      <StickyActionBar scanId={scanId} repoId={repoId} />
+      <StickyActionBar 
+        scanId={scanId} 
+        repoId={repoId} 
+        hasPatch={!!patch}
+        isGeneratingPatch={isGeneratingPatch}
+        onGeneratePatch={handleGeneratePatch}
+      />
       
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* LEFT PANEL - Vulnerability Explorer (25%) */}
@@ -121,7 +148,8 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
             selectedVulnId={selectedVuln?.id || null}
             onSelect={(vuln) => {
               setSelectedVuln(vuln);
-              setActiveTab('analysis'); // Reset to analysis tab when changing vuln
+              setActiveTab('analysis');
+              setGenerationError(null); // Clear errors when switching
             }}
           />
         </div>
@@ -139,7 +167,14 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
               <div className="flex-1 overflow-y-auto">
                 {activeTab === 'analysis' && <AIAnalysisTab vuln={selectedVuln} />}
                 {activeTab === 'code' && <VulnerableCodeTab vuln={selectedVuln} />}
-                {activeTab === 'patch' && patch && <AIPatchTab patch={patch} />}
+                {activeTab === 'patch' && (
+                  <AIPatchTab 
+                    patch={patch} 
+                    isGenerating={isGeneratingPatch}
+                    onGenerate={handleGeneratePatch}
+                    error={generationError}
+                  />
+                )}
                 {activeTab === 'validation' && patch && <ValidationTab vuln={selectedVuln} patch={patch} />}
               </div>
             </>

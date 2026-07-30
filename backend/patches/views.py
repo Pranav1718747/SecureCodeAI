@@ -33,7 +33,6 @@ class PatchViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def generate(self, request):
         from reviews.models import Vulnerability
-        from .tasks import generate_patch_task
         
         vuln_id = request.data.get('vulnerability_id')
         if not vuln_id:
@@ -44,5 +43,45 @@ class PatchViewSet(viewsets.ModelViewSet):
         except Vulnerability.DoesNotExist:
             return Response({"error": "Vulnerability not found"}, status=status.HTTP_404_NOT_FOUND)
             
-        generate_patch_task.delay(vuln.id)
-        return Response({"message": "Patch generation started in background"}, status=status.HTTP_202_ACCEPTED)
+        # Check if patch already exists
+        existing_patch = Patch.objects.filter(vulnerability=vuln).first()
+        if existing_patch:
+            # We still need to return the expected schema even if it exists
+            return Response({
+                "success": True,
+                "patch_id": existing_patch.id,
+                "explanation": existing_patch.explanation,
+                "reasoning": existing_patch.ai_response_json.get("reasoning", "") if existing_patch.ai_response_json else "",
+                "unified_diff": existing_patch.diff_content,
+                "split_diff": existing_patch.diff_content,
+                "patched_code": existing_patch.ai_response_json.get("patch", "") if existing_patch.ai_response_json else "",
+                "fallback_patch": existing_patch.ai_response_json.get("fallback_fix", None) if existing_patch.ai_response_json else None,
+                "confidence": existing_patch.ai_response_json.get("confidence", 0) if existing_patch.ai_response_json else 0,
+                "validation": existing_patch.ai_response_json.get("validation", {}) if existing_patch.ai_response_json else {},
+                "risk_reduction": "High"
+            }, status=status.HTTP_200_OK)
+
+        try:
+            patch = GitPatchService.generate_patch(vuln)
+            return Response({
+                "success": True,
+                "patch_id": patch.id,
+                "explanation": patch.explanation,
+                "reasoning": patch.ai_response_json.get("reasoning", ""),
+                "unified_diff": patch.diff_content,
+                "split_diff": patch.diff_content,
+                "patched_code": patch.ai_response_json.get("patch", ""),
+                "fallback_patch": patch.ai_response_json.get("fallback_fix", None),
+                "confidence": patch.ai_response_json.get("confidence", 0),
+                "validation": patch.ai_response_json.get("validation", {}),
+                "risk_reduction": "High"
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            from ai.security.report_generator import generate_fallback_fix
+            fallback = generate_fallback_fix(vuln)
+            return Response({
+                "success": False,
+                "reason": str(e),
+                "fallback_used": True,
+                "fallback_response": fallback
+            }, status=status.HTTP_201_CREATED)

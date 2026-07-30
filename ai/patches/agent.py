@@ -3,7 +3,7 @@
 Generates autofix git diffs for identified vulnerabilities using LLMs.
 """
 
-from typing import Any
+from typing import Any, List, Dict
 import structlog
 from pydantic import BaseModel, Field
 
@@ -12,10 +12,26 @@ from ai.agents.base import BaseAgent, AgentInvocationError
 logger = structlog.get_logger(__name__)
 
 
+class PatchValidation(BaseModel):
+    semgrep_passed: bool = Field(default=False)
+    bandit_passed: bool = Field(default=False)
+    syntax_passed: bool = Field(default=False)
+    compilation_passed: bool = Field(default=False)
+
+
 class PatchResponse(BaseModel):
-    """Pydantic schema for the generated patch."""
-    diff_content: str = Field(description="The unified git diff content fixing the vulnerability.")
-    explanation: str = Field(description="A brief explanation of how the patch fixes the issue.")
+    """Pydantic schema for the generated patch matching exactly what frontend expects."""
+    summary: str = Field(description="A short summary of the patch.")
+    reasoning: str = Field(description="Why this fix was selected and how it removes the vulnerability.")
+    patch: str = Field(description="The exact replaced code block (just the replacement).")
+    diff: str = Field(description="The unified git diff content fixing the vulnerability.")
+    confidence: int = Field(description="AI Confidence score (0-100).")
+    breaking_change: bool = Field(description="Whether this patch introduces a breaking change.")
+    files_modified: List[str] = Field(description="List of files modified by this patch.")
+    validation: PatchValidation = Field(description="Mock validation status from AI (backend will override this with real validation later if needed).")
+    commit_message: str = Field(description="A suitable git commit message.")
+    pr_title: str = Field(description="A suitable Pull Request title.")
+    pr_description: str = Field(description="A suitable Pull Request description.")
 
 
 class PatchAgent(BaseAgent):
@@ -24,48 +40,59 @@ class PatchAgent(BaseAgent):
     def __init__(self, model_id: str = "llama-3.3-70b-versatile"):
         super().__init__(model_id=model_id, temperature=0.1)
 
-    def generate_patch(self, vulnerability_title: str, code_snippet: str, description: str) -> PatchResponse:
-        """Generate a patch for a specific vulnerability.
+    def generate_patch(
+        self, 
+        vulnerability_title: str, 
+        description: str,
+        severity: str,
+        cwe_id: str,
+        owasp_category: str,
+        file_path: str,
+        line_number: int,
+        code_context: str
+    ) -> PatchResponse:
+        """Generate a patch for a specific vulnerability using rich context."""
+        logger.info("patch_agent.generate_patch.started", vulnerability_title=vulnerability_title, file=file_path)
         
-        Args:
-            vulnerability_title: The title of the vulnerability.
-            code_snippet: The vulnerable code.
-            description: Description of the vulnerability.
-            
-        Returns:
-            PatchResponse: The generated patch and explanation.
-        """
-        logger.info("patch_agent.generate_patch.started", vulnerability_title=vulnerability_title)
-        
-        prompt = f"""You are an expert security engineer. Your task is to fix a security vulnerability.
-        
-Vulnerability: {vulnerability_title}
-Description: {description}
+        prompt = f"""You are a Principal Application Security Engineer. Your task is to generate a secure, production-ready remediation for a vulnerability.
 
-Vulnerable Code Snippet:
+You MUST NEVER rewrite unrelated code. Keep the patch minimal and surgical. You MUST preserve existing formatting, naming conventions, and architecture.
+
+### Vulnerability Context
+- **Title:** {vulnerability_title}
+- **Severity:** {severity}
+- **CWE:** {cwe_id}
+- **OWASP:** {owasp_category}
+- **File:** {file_path}
+- **Vulnerable Line:** {line_number}
+- **Description:** {description}
+
+### Actual Repository Code Context (Around Line {line_number})
 ```
-{code_snippet}
+{code_context}
 ```
 
-Please generate a unified git diff that fixes this vulnerability, and provide a brief explanation of the fix.
-Output your response as JSON matching the following schema:
-{{
-    "diff_content": "--- a/file\\n+++ b/file\\n@@ ...",
-    "explanation": "I fixed this by..."
-}}
+Generate a secure replacement for the vulnerable lines, and provide a unified Git diff. 
+Output your response as structured JSON matching the provided schema exactly.
 """
         try:
-            # We don't actually hit Bedrock in this mock MVP unless configured.
-            # Using BaseAgent.invoke will trigger real AWS Bedrock calls.
-            # If it fails (e.g. no AWS credentials), we'll fallback gracefully.
             response = self.invoke(prompt=prompt, response_schema=PatchResponse)
             return response
         except AgentInvocationError as e:
             logger.warning("patch_agent.generate_patch.llm_failed_falling_back_to_mock", error=str(e))
-            # Fallback mock for local development without AWS credentials
+            # Fallback mock matching new schema
             return PatchResponse(
-                diff_content=f"--- a/file\n+++ b/file\n@@ -1 +1 @@\n- # vulnerable code\n+ # fixed {vulnerability_title}",
-                explanation="This is a fallback mock explanation because AWS Bedrock invocation failed or is unconfigured."
+                summary=f"Fixed {vulnerability_title}",
+                reasoning="This is a fallback explanation due to an LLM invocation error.",
+                patch="# Fallback fixed code\npass",
+                diff=f"--- a/{file_path}\n+++ b/{file_path}\n@@ -{line_number} +{line_number} @@\n- # vulnerable code\n+ # fallback fix",
+                confidence=50,
+                breaking_change=False,
+                files_modified=[file_path],
+                validation=PatchValidation(),
+                commit_message=f"Security: Fix {vulnerability_title}",
+                pr_title=f"Fix: {vulnerability_title}",
+                pr_description="Automated security patch generated by SecureCode AI fallback."
             )
 
     def run(self, state: Any) -> dict[str, Any]:

@@ -23,6 +23,7 @@ class Patch(TimeStampedModel):
         ]
     )
     pull_request_url = models.URLField(max_length=500, null=True, blank=True)
+    ai_response_json = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return f"Patch for {self.vulnerability.title} ({self.status})"

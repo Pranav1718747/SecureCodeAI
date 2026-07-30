@@ -190,3 +190,40 @@ class SecurityAgent(BaseAgent):
                 message=str(e),
             )
             return {"errors": state.errors + [err]}
+
+    def generate_analysis(self, vuln) -> Any:
+        """Generate a detailed contextual analysis report for a specific vulnerability."""
+        logger.info("security_agent.generate_analysis.started", vuln_title=vuln.title)
+        
+        from pydantic import BaseModel, Field
+        class AnalysisResponse(BaseModel):
+            summary: str = Field(description="A short summary of the vulnerability and where it was found.")
+            attack_scenario: str = Field(description="A step-by-step walkthrough of how an attacker could exploit this.")
+            business_impact: str = Field(description="The potential business impact of an exploit.")
+            compliance_impact: str = Field(description="Any compliance frameworks (SOC2, GDPR, PCI-DSS) violated by this.")
+            remediation: str = Field(description="Step-by-step instructions on how to fix the vulnerability.")
+            secure_example: str = Field(description="A secure code example for the fix.")
+            confidence: int = Field(description="Confidence score (0-100).")
+
+        prompt = f"""You are a Principal Application Security Engineer. Your task is to generate a detailed contextual analysis report for a specific vulnerability.
+
+### Vulnerability Context
+- **Title:** {vuln.title}
+- **Severity:** {vuln.severity}
+- **CWE:** {vuln.cwe_id or 'Unknown'}
+- **OWASP:** {vuln.owasp_category or 'Unknown'}
+- **File:** {vuln.file_path}
+- **Vulnerable Line:** {vuln.line_start}
+- **Description:** {vuln.description}
+
+### Snippet
+```
+{vuln.snippet}
+```
+
+Generate a deep dive analysis of this specific vulnerability in this specific file.
+Output your response as structured JSON matching the provided schema exactly.
+"""
+        response = self.invoke(prompt=prompt, response_schema=AnalysisResponse)
+        logger.info("security_agent.generate_analysis.completed", vuln_title=vuln.title)
+        return response

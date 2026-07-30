@@ -1,12 +1,15 @@
-import { GitPullRequest, ShieldCheck, Download, Share, X } from 'lucide-react';
+import { GitPullRequest, ShieldCheck, Download, Share, X, Wand2, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface StickyActionBarProps {
   scanId: string;
   repoId: string;
+  hasPatch: boolean;
+  isGeneratingPatch: boolean;
+  onGeneratePatch: () => void;
 }
 
-export const StickyActionBar = ({ scanId, repoId }: StickyActionBarProps) => {
+export const StickyActionBar = ({ scanId, repoId, hasPatch, isGeneratingPatch, onGeneratePatch }: StickyActionBarProps) => {
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-[#0a0f1c] border-b border-slate-800 shrink-0">
       <div className="flex items-center gap-4">
@@ -34,14 +37,32 @@ export const StickyActionBar = ({ scanId, repoId }: StickyActionBarProps) => {
           Share
         </button>
         <div className="h-6 w-px bg-slate-800 mx-1" />
-        <button className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm">
-          <GitPullRequest className="h-3.5 w-3.5" />
-          Create PR
-        </button>
-        <button className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors shadow-sm">
-          <ShieldCheck className="h-3.5 w-3.5" />
-          Approve & Apply
-        </button>
+        
+        {/* Generate Patch Button */}
+        {!hasPatch && (
+          <button 
+            onClick={onGeneratePatch}
+            disabled={isGeneratingPatch}
+            className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors shadow-sm"
+          >
+            {isGeneratingPatch ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            {isGeneratingPatch ? 'Generating...' : 'Generate AI Patch'}
+          </button>
+        )}
+
+        {/* Existing Actions (only show if patch exists for context) */}
+        {hasPatch && (
+          <>
+            <button className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm">
+              <GitPullRequest className="h-3.5 w-3.5" />
+              Create PR
+            </button>
+            <button className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors shadow-sm">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Approve & Apply
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

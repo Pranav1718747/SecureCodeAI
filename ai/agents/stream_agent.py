@@ -31,7 +31,7 @@ class StreamAgent:
         self.knowledge_agent = KnowledgeAgent()
         self.critic_agent = CriticAgent()
         
-    def _bulk_save_and_stream(self, findings: list, scan_id: str, processed_files: int, total_files: int):
+    def _bulk_save_and_stream(self, findings: list, scan_id: str, processed_files: int, total_files: int, file_contents: dict[str, str]):
         """Save all findings to DB in bulk and stream a single WebSocket update."""
         if not findings:
             return
@@ -43,9 +43,68 @@ class StreamAgent:
             
             scan = Scan.objects.get(id=scan_id)
             
+            def get_language(file_path: str) -> str:
+                ext = file_path.split('.')[-1].lower() if '.' in file_path else ''
+                return {
+                    'py': 'python', 'js': 'javascript', 'jsx': 'javascript',
+                    'ts': 'typescript', 'tsx': 'typescript', 'java': 'java',
+                    'go': 'go', 'rs': 'rust', 'c': 'c', 'cpp': 'cpp',
+                    'h': 'c', 'hpp': 'cpp', 'cs': 'csharp', 'rb': 'ruby',
+                    'php': 'php', 'swift': 'swift', 'kt': 'kotlin',
+                    'scala': 'scala', 'sh': 'bash', 'bash': 'bash'
+                }.get(ext, 'plaintext')
+            
             # 1. Build Vulnerability objects for bulk_create
             vuln_objects = []
             for finding in findings:
+                # Extract code context
+                # The LLM sometimes hallucinates leading slashes or slightly different paths
+                normalized_path = finding.file_path.lstrip('./')
+                matched_key = None
+                for key in file_contents.keys():
+                    if key.endswith(normalized_path) or normalized_path.endswith(key):
+                        matched_key = key
+                        break
+                        
+                content = file_contents.get(matched_key, "") if matched_key else ""
+                lines = content.split('\n') if content else []
+                line_idx = finding.line_number - 1
+                
+                # Default to snippet if file content not found
+                code_context = finding.code_snippet
+                context_line_start = finding.line_number
+                language = get_language(finding.file_path)
+                
+                if lines and 0 <= line_idx < len(lines):
+                    total_lines = len(lines)
+                    if total_lines < 300:
+                        start_idx = 0
+                        end_idx = total_lines
+                    else:
+                        start_idx = max(0, line_idx - 100)
+                        end_idx = min(total_lines, line_idx + 101)
+                    
+                    code_context = '\n'.join(lines[start_idx:end_idx])
+                    context_line_start = start_idx + 1
+                    
+                    logger.info(
+                        "stream_agent.context_extraction",
+                        file_path=finding.file_path,
+                        resolved_path=matched_key,
+                        exists="YES" if matched_key else "NO",
+                        total_lines=total_lines,
+                        finding_line=finding.line_number,
+                        returning_start=context_line_start,
+                        returning_end=context_line_start + (end_idx - start_idx) - 1,
+                        returned_lines=end_idx - start_idx
+                    )
+                else:
+                    logger.info(
+                        "stream_agent.context_extraction_failed",
+                        file_path=finding.file_path,
+                        exists="NO",
+                    )
+                    
                 vuln_objects.append(Vulnerability(
                     scan=scan,
                     cwe_id=getattr(finding, 'cwe_id', ''),
@@ -57,7 +116,10 @@ class StreamAgent:
                     file_path=finding.file_path,
                     line_start=finding.line_number,
                     line_end=finding.line_number,
-                    snippet=finding.code_snippet
+                    snippet=finding.code_snippet,
+                    code_context=code_context,
+                    language=language,
+                    context_line_start=context_line_start
                 ))
             
             # 2. Single bulk insert instead of N individual creates
@@ -83,6 +145,9 @@ class StreamAgent:
                     'line_start': vuln.line_start,
                     'line_end': vuln.line_end,
                     'snippet': vuln.snippet,
+                    'code_context': vuln.code_context,
+                    'language': vuln.language,
+                    'context_line_start': vuln.context_line_start,
                     'is_false_positive': vuln.is_false_positive,
                     'created_at': vuln.created_at.isoformat() if vuln.created_at else '',
                 })
@@ -202,7 +267,8 @@ class StreamAgent:
             if batch_findings and state.scan_id:
                 self._bulk_save_and_stream(
                     batch_findings, state.scan_id,
-                    new_processed, state.total_files
+                    new_processed, state.total_files,
+                    file_contents
                 )
             
             t_end = time.time()
