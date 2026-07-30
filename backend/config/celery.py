@@ -5,7 +5,13 @@ directly from Django's settings module under the CELERY namespace.
 """
 
 import os
+from pathlib import Path
 from celery import Celery
+from dotenv import load_dotenv
+
+# Load .env from project root (one level above backend/)
+_env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(dotenv_path=_env_path)
 
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")

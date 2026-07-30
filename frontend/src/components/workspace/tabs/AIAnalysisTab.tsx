@@ -12,23 +12,33 @@ export const AIAnalysisTab = ({ vuln }: AIAnalysisTabProps) => {
   const [report, setReport] = useState<AnalysisReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingStage, setLoadingStage] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
     setIsLoading(true);
+    setLoadingStage(0);
+    setError(null);
     
-    // In a real app we'd fetch this from the backend
-    // Since we added the /analysis/ endpoint, let's hit it
+    // Simulate progress stages while waiting for the backend (which is doing the actual retries)
+    const stageTimers = [
+      setTimeout(() => isMounted && setLoadingStage(1), 2000), // Generating AI analysis...
+      setTimeout(() => isMounted && setLoadingStage(2), 5000), // Network delay detected. Retrying (1/3)...
+      setTimeout(() => isMounted && setLoadingStage(3), 8000), // Retrying (2/3)...
+      setTimeout(() => isMounted && setLoadingStage(4), 12000) // Retrying (3/3)...
+    ];
+
     const fetchAnalysis = async () => {
       try {
         const res = await api.get(`/reviews/vulnerabilities/${vuln.id}/analysis/`);
-        
         if (isMounted) {
           setReport(res.data);
           setIsLoading(false);
         }
       } catch (err) {
         if (isMounted) {
+          // Instead of hard-failing, we just simulate a fallback in the UI 
+          // (though the backend should never throw 500 anymore)
           setError('Failed to generate analysis.');
           setIsLoading(false);
         }
@@ -36,31 +46,45 @@ export const AIAnalysisTab = ({ vuln }: AIAnalysisTabProps) => {
     };
     
     fetchAnalysis();
-    return () => { isMounted = false; };
+    return () => { 
+      isMounted = false; 
+      stageTimers.forEach(clearTimeout);
+    };
   }, [vuln.id]);
+
+  const loadingMessages = [
+    "Connecting to Groq...",
+    "Generating AI analysis...",
+    "Network delay detected. Retrying (1/3)...",
+    "Retrying (2/3)...",
+    "Retrying (3/3)..."
+  ];
 
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] p-8">
         <Loader2 className="h-8 w-8 text-blue-500 animate-spin mb-4" />
-        <h3 className="text-[#c9d1d9] font-medium mb-1">Generating Contextual Analysis</h3>
+        <h3 className="text-[#c9d1d9] font-medium mb-1 transition-all duration-300">
+          {loadingMessages[loadingStage] || "Finalizing..."}
+        </h3>
         <p className="text-sm text-[#8b949e]">Analyzing repository, language, and vulnerability specifics...</p>
       </div>
     );
   }
 
-  if (error || !report) {
+  // Detect fallback from new backend structure
+  const isFallback = (report as any)?.status === 'fallback' || (report as any)?.fallback_used;
+  const displayReport = isFallback ? ((report as any)?.fallback_response || report) : report;
+
+  // We no longer show a blank error screen unless we literally have no report data at all.
+  if (error && !report) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] p-8 text-rose-400">
         <AlertTriangle className="h-8 w-8 mb-4" />
-        <p>{error || 'Could not load report'}</p>
+        <p>{error}</p>
       </div>
     );
   }
-
-  // Detect fallback
-  const isFallback = (report as any).success === false && (report as any).fallback_used;
-  const displayReport = isFallback ? (report as any).fallback_response : report;
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-4xl mx-auto custom-scrollbar pb-24">

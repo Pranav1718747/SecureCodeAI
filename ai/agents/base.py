@@ -1,11 +1,13 @@
-"""Base Agent Abstraction for Amazon Bedrock Invocations.
+"""Base Agent Abstraction for Groq LLM Invocations.
 
-Provides robust LLM calls, exponential backoff retry mechanisms,
-and Pydantic response parsing for all reasoning agents.
+Provides robust LLM calls, smart retry classification (retryable vs
+non-retryable errors), exponential backoff, and Pydantic response
+parsing for all reasoning agents.
 """
 
 import json
 import time
+import uuid
 from abc import ABC, abstractmethod
 from typing import Type, TypeVar, Any, Optional
 
@@ -17,12 +19,65 @@ logger = structlog.get_logger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
 
+# ---------------------------------------------------------------------------
+# Error Classification
+# ---------------------------------------------------------------------------
+
+# Exceptions that should NEVER be retried (fail immediately)
+_NON_RETRYABLE_TYPES = (
+    ValueError,          # missing API key, bad config
+    ValidationError,     # pydantic parse failure
+    json.JSONDecodeError,
+)
+
+# Groq SDK error names that are non-retryable
+_NON_RETRYABLE_GROQ_NAMES = {"AuthenticationError", "BadRequestError"}
+
+# Groq SDK error names that ARE retryable
+_RETRYABLE_GROQ_NAMES = {"RateLimitError", "APIConnectionError", "APITimeoutError"}
+
+# HTTP status codes that are retryable
+_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+
+
+def _is_retryable(exc: Exception) -> bool:
+    """Return True if the exception is worth retrying."""
+    # Explicit non-retryable types
+    if isinstance(exc, _NON_RETRYABLE_TYPES):
+        return False
+
+    exc_name = type(exc).__name__
+
+    # Groq SDK non-retryable
+    if exc_name in _NON_RETRYABLE_GROQ_NAMES:
+        return False
+
+    # Groq SDK retryable
+    if exc_name in _RETRYABLE_GROQ_NAMES:
+        return True
+
+    # Groq APIStatusError — check HTTP status code
+    status_code = getattr(exc, "status_code", None)
+    if status_code is not None:
+        return status_code in _RETRYABLE_STATUS_CODES
+
+    # Python stdlib network errors
+    if isinstance(exc, (ConnectionError, TimeoutError, OSError)):
+        return True
+
+    # Default: retry unknown errors (safer than crashing)
+    return True
+
+
 class AgentInvocationError(Exception):
     """Raised when an agent invocation fails after retries."""
 
-    def __init__(self, message: str, original_exception: Optional[Exception] = None):
+    def __init__(self, message: str, original_exception: Optional[Exception] = None,
+                 retry_count: int = 0, is_retryable_failure: bool = True):
         super().__init__(message)
         self.original_exception = original_exception
+        self.retry_count = retry_count
+        self.is_retryable_failure = is_retryable_failure
 
 
 class BaseAgent(ABC):
@@ -54,11 +109,11 @@ class BaseAgent(ABC):
         if self._groq_client is None:
             import os
             from groq import Groq
-            
+
             api_key = os.environ.get("GROQ_API_KEY")
             if not api_key:
                 raise ValueError("GROQ_API_KEY environment variable is missing.")
-                
+
             self._groq_client = Groq(api_key=api_key)
         return self._groq_client
 
@@ -83,24 +138,48 @@ class BaseAgent(ABC):
         Raises:
             AgentInvocationError: If invocation or parsing fails after retries.
         """
+        result, _ = self.invoke_with_metadata(
+            prompt=prompt,
+            response_schema=response_schema,
+            max_retries=max_retries,
+            backoff_factor=backoff_factor,
+        )
+        return result
+
+    def invoke_with_metadata(
+        self,
+        prompt: str,
+        response_schema: Type[T],
+        max_retries: int = 3,
+        backoff_factor: float = 2.0,
+    ) -> tuple[T, dict]:
+        """Invoke LLM and return (parsed_result, metadata).
+
+        metadata keys: request_id, source, status, retry_count,
+        latency_ms, prompt_tokens, completion_tokens, model_id, error.
+        """
+        request_id = str(uuid.uuid4())[:8]
         log = logger.bind(
             agent=self.__class__.__name__,
             model_id=self.model_id,
             schema=response_schema.__name__,
+            request_id=request_id,
         )
         log.info("agent_invocation.started")
 
         delay = 1.0
         last_exception: Optional[Exception] = None
+        attempts_made = 0
+        start_time = time.monotonic()
 
         for attempt in range(1, max_retries + 1):
+            attempts_made = attempt
+            attempt_start = time.monotonic()
             try:
-                import json
                 schema_dict = response_schema.model_json_schema()
                 schema_str = json.dumps(schema_dict, indent=2)
                 enriched_prompt = f"{prompt}\n\nYou MUST return a valid JSON object matching this JSON Schema exactly:\n{schema_str}"
 
-                # Tell Groq we want JSON output if it's supported, else instruct it
                 response = self.client.chat.completions.create(
                     model=self.model_id,
                     messages=[
@@ -112,42 +191,81 @@ class BaseAgent(ABC):
                 )
 
                 completion_text = response.choices[0].message.content
-
                 parsed_result = self._parse_response(
                     completion_text, response_schema
                 )
 
-                # Assuming usage metrics exist on groq response object
                 usage = getattr(response, 'usage', None)
                 input_tokens = usage.prompt_tokens if usage else 0
                 output_tokens = usage.completion_tokens if usage else 0
+                latency_ms = round((time.monotonic() - attempt_start) * 1000)
 
                 log.info(
                     "agent_invocation.completed",
                     attempt=attempt,
                     input_tokens=input_tokens,
                     output_tokens=output_tokens,
+                    latency_ms=latency_ms,
                 )
-                return parsed_result
+
+                metadata = {
+                    "request_id": request_id,
+                    "source": "groq",
+                    "status": "success",
+                    "retry_count": attempt - 1,
+                    "latency_ms": round((time.monotonic() - start_time) * 1000),
+                    "prompt_tokens": input_tokens,
+                    "completion_tokens": output_tokens,
+                    "model_id": self.model_id,
+                    "error": None,
+                }
+                return parsed_result, metadata
 
             except Exception as e:
                 last_exception = e
-                log_event = "agent_invocation.error"
+                latency_ms = round((time.monotonic() - attempt_start) * 1000)
+
+                # Non-retryable: fail immediately
+                if not _is_retryable(e):
+                    log.error(
+                        "agent_invocation.non_retryable_error",
+                        attempt=attempt,
+                        error=str(e),
+                        error_type=type(e).__name__,
+                        latency_ms=latency_ms,
+                    )
+                    raise AgentInvocationError(
+                        f"Agent {self.__class__.__name__} hit non-retryable error: {e}",
+                        original_exception=e,
+                        retry_count=attempt - 1,
+                        is_retryable_failure=False,
+                    ) from e
+
+                # Retryable: log and backoff
                 log.warning(
-                    log_event,
+                    "agent_invocation.retryable_error",
                     attempt=attempt,
                     error=str(e),
-                    next_retry_delay=delay,
+                    error_type=type(e).__name__,
+                    next_retry_delay=delay if attempt < max_retries else None,
+                    latency_ms=latency_ms,
                 )
 
             if attempt < max_retries:
                 time.sleep(delay)
                 delay *= backoff_factor
 
-        log.error("agent_invocation.failed_all_retries", max_retries=max_retries)
+        total_latency = round((time.monotonic() - start_time) * 1000)
+        log.error(
+            "agent_invocation.failed_all_retries",
+            max_retries=max_retries,
+            total_latency_ms=total_latency,
+        )
         raise AgentInvocationError(
-            f"Agent {self.__class__.__name__} failed after {max_retries} attempts.",
+            f"Agent {self.__class__.__name__} failed after {max_retries} retries.",
             original_exception=last_exception,
+            retry_count=attempts_made,
+            is_retryable_failure=True,
         )
 
     def _parse_response(

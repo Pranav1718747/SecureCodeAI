@@ -85,13 +85,16 @@ class VulnerabilityViewSet(viewsets.ModelViewSet):
         vuln = self.get_object()
         
         if not vuln.analysis_report:
-            try:
-                from ai.security.agent import SecurityAgent
-                agent = SecurityAgent()
-                # SecurityAgent isn't initially designed for full report generation, but we will add generate_analysis to it.
-                report = agent.generate_analysis(vuln)
+            from ai.security.agent import SecurityAgent
+            agent = SecurityAgent()
+            report, metadata = agent.generate_analysis(vuln)
+
+            if metadata["status"] == "success":
                 vuln.analysis_report = {
                     "success": True,
+                    "status": "success",
+                    "source": metadata["source"],
+                    "retry_count": metadata.get("retry_count", 0),
                     "summary": report.summary,
                     "attack_scenario": report.attack_scenario,
                     "business_impact": report.business_impact,
@@ -100,14 +103,15 @@ class VulnerabilityViewSet(viewsets.ModelViewSet):
                     "secure_example": report.secure_example,
                     "confidence": report.confidence
                 }
-            except Exception as e:
-                from ai.security.report_generator import generate_full_report
-                fallback = generate_full_report(vuln)
+            else:
                 vuln.analysis_report = {
                     "success": False,
-                    "reason": str(e),
+                    "status": metadata["status"],
+                    "source": metadata["source"],
+                    "reason": metadata.get("reason", "Unknown failure"),
+                    "retry_count": metadata.get("retry_count", 0),
                     "fallback_used": True,
-                    "fallback_response": fallback
+                    "fallback_response": report
                 }
             vuln.save(update_fields=['analysis_report'])
             

@@ -46,9 +46,12 @@ class PatchViewSet(viewsets.ModelViewSet):
         # Check if patch already exists
         existing_patch = Patch.objects.filter(vulnerability=vuln).first()
         if existing_patch:
-            # We still need to return the expected schema even if it exists
+            metadata = existing_patch.ai_response_json.get("metadata", {}) if existing_patch.ai_response_json else {}
             return Response({
-                "success": True,
+                "success": metadata.get("status", "success") == "success",
+                "status": metadata.get("status", "success"),
+                "source": metadata.get("source", "groq"),
+                "retry_count": metadata.get("retry_count", 0),
                 "patch_id": existing_patch.id,
                 "explanation": existing_patch.explanation,
                 "reasoning": existing_patch.ai_response_json.get("reasoning", "") if existing_patch.ai_response_json else "",
@@ -63,8 +66,12 @@ class PatchViewSet(viewsets.ModelViewSet):
 
         try:
             patch = GitPatchService.generate_patch(vuln)
+            metadata = patch.ai_response_json.get("metadata", {})
             return Response({
-                "success": True,
+                "success": metadata.get("status", "success") == "success",
+                "status": metadata.get("status", "success"),
+                "source": metadata.get("source", "groq"),
+                "retry_count": metadata.get("retry_count", 0),
                 "patch_id": patch.id,
                 "explanation": patch.explanation,
                 "reasoning": patch.ai_response_json.get("reasoning", ""),

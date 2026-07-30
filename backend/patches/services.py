@@ -44,7 +44,7 @@ class GitPatchService:
 
         # 2. Invoke AI Agent
         agent = PatchAgent()
-        response = agent.generate_patch(
+        response, metadata = agent.generate_patch(
             vulnerability_title=vulnerability.title,
             description=vulnerability.description,
             severity=vulnerability.severity,
@@ -88,6 +88,7 @@ class GitPatchService:
         ai_response_dict = response.model_dump()
         from ai.security.report_generator import generate_fallback_fix
         ai_response_dict["fallback_fix"] = generate_fallback_fix(vulnerability)
+        ai_response_dict["metadata"] = metadata
         
         patch = Patch.objects.create(
             vulnerability=vulnerability,

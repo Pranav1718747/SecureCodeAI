@@ -123,7 +123,9 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
         [selectedVuln.id]: generatedPatch
       }));
     } catch (err: any) {
-      setGenerationError(err.response?.data?.error || err.message || 'Failed to generate patch');
+      // Backend handles fallback, so if we reach this catch block it means
+      // complete network failure or 500 error from a bug (not an AI failure).
+      setGenerationError(err.response?.data?.error || err.message || 'Network error while generating patch');
     } finally {
       setIsGeneratingPatch(false);
     }

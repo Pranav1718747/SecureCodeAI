@@ -8,7 +8,7 @@ and batch multi-file analysis for performance.
 from typing import Any, Optional
 import structlog
 
-from ai.agents.base import BaseAgent
+from ai.agents.base import BaseAgent, AgentInvocationError
 from ai.agents.state import WorkflowState, AgentError
 from ai.security.schemas import Finding, SecurityAnalysisResult
 from ai.security.detectors import scan_file_heuristics
@@ -192,9 +192,13 @@ class SecurityAgent(BaseAgent):
             return {"errors": state.errors + [err]}
 
     def generate_analysis(self, vuln) -> Any:
-        """Generate a detailed contextual analysis report for a specific vulnerability."""
+        """Generate a detailed contextual analysis report for a specific vulnerability.
+
+        Always returns a structured response — either from Groq or deterministic fallback.
+        Never raises to the caller.
+        """
         logger.info("security_agent.generate_analysis.started", vuln_title=vuln.title)
-        
+
         from pydantic import BaseModel, Field
         class AnalysisResponse(BaseModel):
             summary: str = Field(description="A short summary of the vulnerability and where it was found.")
@@ -224,6 +228,30 @@ class SecurityAgent(BaseAgent):
 Generate a deep dive analysis of this specific vulnerability in this specific file.
 Output your response as structured JSON matching the provided schema exactly.
 """
-        response = self.invoke(prompt=prompt, response_schema=AnalysisResponse)
-        logger.info("security_agent.generate_analysis.completed", vuln_title=vuln.title)
-        return response
+        try:
+            response, metadata = self.invoke_with_metadata(
+                prompt=prompt, response_schema=AnalysisResponse
+            )
+            logger.info(
+                "security_agent.generate_analysis.completed",
+                vuln_title=vuln.title,
+                retry_count=metadata.get("retry_count", 0),
+                latency_ms=metadata.get("latency_ms"),
+            )
+            return response, {**metadata, "status": "success", "source": "groq"}
+        except AgentInvocationError as e:
+            logger.warning(
+                "security_agent.generate_analysis.fallback",
+                vuln_title=vuln.title,
+                error=str(e),
+                retry_count=e.retry_count,
+            )
+            from ai.security.report_generator import generate_full_report
+            fallback = generate_full_report(vuln)
+            return fallback, {
+                "status": "fallback",
+                "source": "deterministic",
+                "reason": f"Groq unavailable after {e.retry_count} retries: {e}",
+                "retry_count": e.retry_count,
+            }
+

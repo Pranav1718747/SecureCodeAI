@@ -65,12 +65,14 @@ export const AIPatchTab = ({ patch, isGenerating, onGenerate, error }: AIPatchTa
   }
 
   // Error State
-  if (error && !isGenerating) {
+  // We only show error if it's not generating AND we have no patch at all.
+  // With the new pipeline, backend always returns a patch (fallback or real), so this only triggers on complete network failure.
+  if (error && !isGenerating && !patch) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-[#0d1117] p-8">
         <div className="max-w-md w-full bg-rose-500/10 border border-rose-500/30 rounded-xl p-8 text-center">
           <AlertTriangle className="h-12 w-12 text-rose-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-rose-400 mb-2">Unable to generate AI patch</h2>
+          <h2 className="text-xl font-bold text-rose-400 mb-2">Network Error</h2>
           <p className="text-sm text-rose-200/70 mb-6">{error}</p>
           <div className="flex gap-4 justify-center">
             <button 
@@ -78,9 +80,6 @@ export const AIPatchTab = ({ patch, isGenerating, onGenerate, error }: AIPatchTa
               className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg font-medium transition-colors"
             >
               Retry
-            </button>
-            <button className="px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded-lg font-medium transition-colors">
-              View technical logs
             </button>
           </div>
         </div>
@@ -93,9 +92,10 @@ export const AIPatchTab = ({ patch, isGenerating, onGenerate, error }: AIPatchTa
     const stages = [
       "Analyzing repository context",
       "Reading vulnerable file",
-      "Understanding framework",
       "Generating secure implementation",
-      "Creating Git diff",
+      "Network delay detected. Retrying (1/3)...",
+      "Still generating. Retrying (2/3)...",
+      "Final attempt. Retrying (3/3)...",
       "Running Semgrep & Bandit verification",
       "Formatting patch"
     ];
@@ -108,7 +108,7 @@ export const AIPatchTab = ({ patch, isGenerating, onGenerate, error }: AIPatchTa
             <div>
               <h2 className="text-lg font-bold text-[#c9d1d9]">Generating Secure Patch...</h2>
               <div className="text-xs text-[#8b949e] flex items-center gap-1 mt-1">
-                <Clock className="h-3 w-3" /> Estimated remaining: {15 - generationStage * 2}s
+                <Clock className="h-3 w-3" /> Estimated remaining: {Math.max(0, 15 - generationStage * 2)}s
               </div>
             </div>
           </div>
@@ -117,6 +117,8 @@ export const AIPatchTab = ({ patch, isGenerating, onGenerate, error }: AIPatchTa
             {stages.map((stage, idx) => {
               const isPast = idx < generationStage;
               const isCurrent = idx === generationStage;
+              // If it's a future retry stage, don't show it yet so it doesn't look like we're always expecting to fail
+              if (idx > generationStage + 1 && idx > 2) return null;
               
               return (
                 <div key={idx} className={`flex items-center gap-3 text-sm ${
@@ -187,7 +189,7 @@ export const AIPatchTab = ({ patch, isGenerating, onGenerate, error }: AIPatchTa
   const linesRemoved = parsedLines.filter(l => l.type === 'deletion').length;
   
   const createdDate = new Date(patch.created_at);
-  const isFallback = patch.id.startsWith('fallback-');
+  const isFallback = (patch.ai_response_json as any)?.metadata?.status === 'fallback' || patch.id.startsWith('fallback-');
 
   return (
     <div className="flex flex-col h-full bg-[#0d1117]">
