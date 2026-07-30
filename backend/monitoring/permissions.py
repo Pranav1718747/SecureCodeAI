@@ -1,1 +1,1 @@
-"""Custom DRF RBAC permission classes controlling access to monitoring resources."""
+"""Permissions for Monitoring app."""

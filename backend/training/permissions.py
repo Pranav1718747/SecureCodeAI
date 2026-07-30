@@ -1,1 +1,1 @@
-"""Custom DRF RBAC permission classes controlling access to training resources."""
+"""Permissions for Training app."""

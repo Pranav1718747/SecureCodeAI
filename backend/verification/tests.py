@@ -1,1 +1,7 @@
-"""Unit and integration test suites for verification endpoints and models."""
+"""Tests for Verification app."""
+
+from django.test import TestCase
+
+class StubTest(TestCase):
+    def test_stub(self):
+        self.assertTrue(True)

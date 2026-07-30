@@ -1,1 +1,11 @@
-"""DRF serializers for entity data validation and JSON serialization in patches."""
+"""Serializers for Patches app."""
+
+from rest_framework import serializers
+from .models import Patch
+
+
+class PatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patch
+        fields = '__all__'
+        read_only_fields = ['status', 'pull_request_url', 'created_at']

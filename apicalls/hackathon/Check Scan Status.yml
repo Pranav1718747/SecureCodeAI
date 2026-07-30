@@ -1,0 +1,17 @@
+info:
+  name: Check Scan Status
+  type: http
+
+http:
+  method: GET
+  url: http://127.0.0.1:8000/api/v1/reviews/scans/e3f1e7b4-022c-474f-8961-33f13daa05dd/
+  headers:
+    - name: Authorization
+      value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg1MzkwMTQ4LCJpYXQiOjE3ODUzODgzNDgsImp0aSI6IjEwMWNjMjUyM2M5YjQyODM4M2Y4MGU5ZWFjODVlNzg0IiwidXNlcl9pZCI6IjZmZWRkZTY0LWY2ZDMtNGY3YS05ZGYwLWQyZTMzYWYyNjdlOCJ9.7qb2Tb1T8xO5IH9M7Tewl9R5q1Ll9f9JqLa3jG2YN1Q
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

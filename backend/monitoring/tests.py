@@ -1,1 +1,6 @@
-"""Unit and integration test suites for monitoring endpoints and models."""
+"""Tests for Monitoring app."""
+from django.test import TestCase
+
+class StubTest(TestCase):
+    def test_stub(self):
+        self.assertTrue(True)

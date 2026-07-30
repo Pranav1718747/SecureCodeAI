@@ -1,1 +1,1 @@
-"""Django event signal receivers handling side-effects for monitoring entities."""
+"""Signals for Monitoring app."""

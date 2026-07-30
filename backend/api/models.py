@@ -1,1 +1,1 @@
-"""Database ORM model definitions for api domain entities."""
+"""Empty models stub for API Gateway."""

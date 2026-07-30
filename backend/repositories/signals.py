@@ -1,1 +1,3 @@
-"""Django event signal receivers handling side-effects for repositories entities."""
+"""Signals for Repositories app."""
+
+# Add any pre_save or post_save signals here.

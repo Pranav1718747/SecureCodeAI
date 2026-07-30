@@ -1,0 +1,25 @@
+info:
+  name: Login
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: 127.0.0.1:8000/api/v1/accounts/users/create_enterprise_user/
+  body:
+    type: json
+    data: |
+      {
+        "email": "ceo@mycompany.com",
+        "password": "super_secure_password",
+        "first_name": "Pranav",
+        "last_name": "Admin",
+        "org_name": "Pranavs Tech Company"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

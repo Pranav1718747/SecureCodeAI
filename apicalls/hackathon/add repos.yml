@@ -1,0 +1,28 @@
+info:
+  name: add repos
+  type: http
+
+http:
+  method: POST
+  url: 127.0.0.1:8000/api/v1/repositories/
+  headers:
+    - name: Authorization
+      value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg1MzkwMTQ4LCJpYXQiOjE3ODUzODgzNDgsImp0aSI6IjEwMWNjMjUyM2M5YjQyODM4M2Y4MGU5ZWFjODVlNzg0IiwidXNlcl9pZCI6IjZmZWRkZTY0LWY2ZDMtNGY3YS05ZGYwLWQyZTMzYWYyNjdlOCJ9.7qb2Tb1T8xO5IH9M7Tewl9R5q1Ll9f9JqLa3jG2YN1Q
+  body:
+    type: json
+    data: |-
+      {
+        "name": "cricket-simulator",
+        "full_name": "Pranav1718747/cricket-simulator",
+        "clone_url": "https://github.com/Pranav1718747/cricket-simulator.git",
+        "default_branch": "main",
+        "is_private": false,
+        "language": "javascript"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

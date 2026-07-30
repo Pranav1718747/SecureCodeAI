@@ -1,1 +1,8 @@
-"""AppConfig initialization for the accounts Django app."""
+"""Accounts application config."""
+from django.apps import AppConfig
+
+class AccountsConfig(AppConfig):
+    name = "accounts"
+    
+    def ready(self):
+        import accounts.signals  # noqa

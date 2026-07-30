@@ -1,0 +1,3117 @@
+openapi: 3.0.3
+info:
+  title: SecureCode AI Enterprise API
+  version: 1.0.0
+  description: RESTful API and WebSockets for multi-agent code analysis.
+paths:
+  /api/v1/accounts/api-keys/:
+    get:
+      operationId: v1_accounts_api_keys_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAPIKeyList'
+          description: ''
+    post:
+      operationId: v1_accounts_api_keys_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+          description: ''
+  /api/v1/accounts/api-keys/{id}/:
+    get:
+      operationId: v1_accounts_api_keys_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+          description: ''
+    put:
+      operationId: v1_accounts_api_keys_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+          description: ''
+    patch:
+      operationId: v1_accounts_api_keys_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAPIKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAPIKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAPIKey'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+          description: ''
+    delete:
+      operationId: v1_accounts_api_keys_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/accounts/api-keys/{id}/revoke/:
+    post:
+      operationId: v1_accounts_api_keys_revoke_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+          description: ''
+  /api/v1/accounts/organizations/:
+    get:
+      operationId: v1_accounts_organizations_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrganizationList'
+          description: ''
+    post:
+      operationId: v1_accounts_organizations_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/v1/accounts/organizations/{id}/:
+    get:
+      operationId: v1_accounts_organizations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    put:
+      operationId: v1_accounts_organizations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    patch:
+      operationId: v1_accounts_organizations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    delete:
+      operationId: v1_accounts_organizations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/accounts/token/:
+    post:
+      operationId: v1_accounts_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomTokenObtainPair'
+          description: ''
+  /api/v1/accounts/token/refresh/:
+    post:
+      operationId: v1_accounts_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/accounts/users/:
+    get:
+      operationId: v1_accounts_users_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+    post:
+      operationId: v1_accounts_users_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/accounts/users/{id}/:
+    get:
+      operationId: v1_accounts_users_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: v1_accounts_users_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: v1_accounts_users_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    delete:
+      operationId: v1_accounts_users_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/accounts/users/create_enterprise_user/:
+    post:
+      operationId: v1_accounts_users_create_enterprise_user_create
+      description: Public endpoint for initial enterprise registration.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/evaluation/:
+    get:
+      operationId: v1_evaluation_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedModelEvaluationList'
+          description: ''
+  /api/v1/evaluation/{id}/:
+    get:
+      operationId: v1_evaluation_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelEvaluation'
+          description: ''
+  /api/v1/monitoring/audit-logs/:
+    get:
+      operationId: v1_monitoring_audit_logs_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
+          description: ''
+  /api/v1/monitoring/audit-logs/{id}/:
+    get:
+      operationId: v1_monitoring_audit_logs_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLog'
+          description: ''
+  /api/v1/patches/:
+    get:
+      operationId: v1_patches_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPatchList'
+          description: ''
+    post:
+      operationId: v1_patches_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Patch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Patch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Patch'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patch'
+          description: ''
+  /api/v1/patches/{id}/:
+    get:
+      operationId: v1_patches_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patch'
+          description: ''
+    put:
+      operationId: v1_patches_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Patch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Patch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Patch'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patch'
+          description: ''
+    patch:
+      operationId: v1_patches_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPatch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPatch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPatch'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patch'
+          description: ''
+    delete:
+      operationId: v1_patches_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/patches/{id}/apply_pr/:
+    post:
+      operationId: v1_patches_apply_pr_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Patch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Patch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Patch'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patch'
+          description: ''
+  /api/v1/repositories/:
+    get:
+      operationId: v1_repositories_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRepositoryList'
+          description: ''
+    post:
+      operationId: v1_repositories_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepositoryCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RepositoryCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RepositoryCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoryCreate'
+          description: ''
+  /api/v1/repositories/{id}/:
+    get:
+      operationId: v1_repositories_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+          description: ''
+    put:
+      operationId: v1_repositories_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Repository'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Repository'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Repository'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+          description: ''
+    patch:
+      operationId: v1_repositories_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRepository'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRepository'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRepository'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+          description: ''
+    delete:
+      operationId: v1_repositories_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/repositories/upload-zip/:
+    post:
+      operationId: v1_repositories_upload_zip_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZipUpload'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ZipUpload'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ZipUpload'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZipUpload'
+          description: ''
+  /api/v1/repositories/webhooks/github/:
+    post:
+      operationId: v1_repositories_webhooks_github_create
+      description: Handles incoming GitHub webhooks.
+      tags:
+      - v1
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reviews/scans/:
+    get:
+      operationId: v1_reviews_scans_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedScanList'
+          description: ''
+    post:
+      operationId: v1_reviews_scans_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScanCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScanCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanCreate'
+          description: ''
+  /api/v1/reviews/scans/{id}/:
+    get:
+      operationId: v1_reviews_scans_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scan'
+          description: ''
+    put:
+      operationId: v1_reviews_scans_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Scan'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Scan'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Scan'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scan'
+          description: ''
+    patch:
+      operationId: v1_reviews_scans_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedScan'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedScan'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedScan'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scan'
+          description: ''
+    delete:
+      operationId: v1_reviews_scans_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/reviews/vulnerabilities/:
+    get:
+      operationId: v1_reviews_vulnerabilities_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVulnerabilityList'
+          description: ''
+    post:
+      operationId: v1_reviews_vulnerabilities_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Vulnerability'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Vulnerability'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Vulnerability'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vulnerability'
+          description: ''
+  /api/v1/reviews/vulnerabilities/{id}/:
+    get:
+      operationId: v1_reviews_vulnerabilities_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vulnerability'
+          description: ''
+    put:
+      operationId: v1_reviews_vulnerabilities_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VulnerabilityUpdate'
+          description: ''
+    patch:
+      operationId: v1_reviews_vulnerabilities_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVulnerabilityUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVulnerabilityUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVulnerabilityUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VulnerabilityUpdate'
+          description: ''
+    delete:
+      operationId: v1_reviews_vulnerabilities_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/reviews/vulnerabilities/{id}/toggle_false_positive/:
+    post:
+      operationId: v1_reviews_vulnerabilities_toggle_false_positive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Vulnerability'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Vulnerability'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Vulnerability'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vulnerability'
+          description: ''
+  /api/v1/training/feedback/:
+    get:
+      operationId: v1_training_feedback_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFeedbackEventList'
+          description: ''
+    post:
+      operationId: v1_training_feedback_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FeedbackEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FeedbackEvent'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackEvent'
+          description: ''
+  /api/v1/training/feedback/{id}/:
+    get:
+      operationId: v1_training_feedback_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackEvent'
+          description: ''
+    put:
+      operationId: v1_training_feedback_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FeedbackEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FeedbackEvent'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackEvent'
+          description: ''
+    patch:
+      operationId: v1_training_feedback_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedbackEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedbackEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedbackEvent'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackEvent'
+          description: ''
+    delete:
+      operationId: v1_training_feedback_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/training/jobs/:
+    get:
+      operationId: v1_training_jobs_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFineTuningJobList'
+          description: ''
+  /api/v1/training/jobs/{id}/:
+    get:
+      operationId: v1_training_jobs_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FineTuningJob'
+          description: ''
+  /api/v1/training/jobs/trigger/:
+    post:
+      operationId: v1_training_jobs_trigger_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FineTuningJob'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FineTuningJob'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FineTuningJob'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FineTuningJob'
+          description: ''
+  /api/v1/verification/runs/:
+    get:
+      operationId: v1_verification_runs_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVerificationRunList'
+          description: ''
+  /api/v1/verification/runs/{id}/:
+    get:
+      operationId: v1_verification_runs_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationRun'
+          description: ''
+components:
+  schemas:
+    APIKey:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        name:
+          type: string
+          maxLength: 100
+        key_prefix:
+          type: string
+          readOnly: true
+        scopes: {}
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_revoked:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+      required:
+      - created_at
+      - id
+      - is_revoked
+      - key_prefix
+      - name
+    ActionEnum:
+      enum:
+      - ACCEPTED
+      - REJECTED
+      - MODIFIED
+      type: string
+      description: |-
+        * `ACCEPTED` - Accepted
+        * `REJECTED` - Rejected
+        * `MODIFIED` - Modified
+    AstIndexStatusEnum:
+      enum:
+      - NOT_INDEXED
+      - INDEXING
+      - INDEXED
+      - FAILED
+      type: string
+      description: |-
+        * `NOT_INDEXED` - Not Indexed
+        * `INDEXING` - Indexing
+        * `INDEXED` - Indexed
+        * `FAILED` - Failed
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        ip_address:
+          type: string
+          nullable: true
+        action:
+          type: string
+          maxLength: 100
+        resource_type:
+          type: string
+          maxLength: 100
+        resource_id:
+          type: string
+          maxLength: 255
+        payload:
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        actor:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+          nullable: true
+      required:
+      - action
+      - created_at
+      - id
+      - organization
+      - resource_id
+      - resource_type
+    CustomTokenObtainPair:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    FeedbackEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        user_comments:
+          type: string
+          nullable: true
+        modified_diff:
+          type: string
+          nullable: true
+        patch:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        reviewed_by:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+          readOnly: true
+          nullable: true
+      required:
+      - action
+      - created_at
+      - id
+      - patch
+      - reviewed_by
+      - updated_at
+    FineTuningJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        sagemaker_job_name:
+          type: string
+          maxLength: 255
+        base_model:
+          type: string
+          maxLength: 255
+        output_adapter_s3_path:
+          type: string
+          nullable: true
+          maxLength: 1024
+        status:
+          $ref: '#/components/schemas/FineTuningJobStatusEnum'
+        training_loss:
+          type: number
+          format: double
+          nullable: true
+        epochs:
+          type: integer
+        learning_rate:
+          type: number
+          format: double
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - base_model
+      - created_at
+      - id
+      - sagemaker_job_name
+      - updated_at
+    FineTuningJobStatusEnum:
+      enum:
+      - STARTING
+      - IN_PROGRESS
+      - COMPLETED
+      - FAILED
+      - STOPPED
+      type: string
+      description: |-
+        * `STARTING` - Starting
+        * `IN_PROGRESS` - In Progress
+        * `COMPLETED` - Completed
+        * `FAILED` - Failed
+        * `STOPPED` - Stopped
+    ModelEvaluation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        model_identifier:
+          type: string
+          maxLength: 255
+        benchmark_name:
+          type: string
+          maxLength: 100
+        precision_score:
+          type: number
+          format: double
+        recall_score:
+          type: number
+          format: double
+        pass_at_1_score:
+          type: number
+          format: double
+        false_positive_rate:
+          type: number
+          format: double
+        evaluated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        fine_tuning_job:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+          nullable: true
+      required:
+      - benchmark_name
+      - created_at
+      - evaluated_at
+      - id
+      - model_identifier
+      - updated_at
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        domain:
+          type: string
+          maxLength: 255
+        subscription_plan:
+          $ref: '#/components/schemas/SubscriptionPlanEnum'
+        max_repositories:
+          type: integer
+        is_active:
+          type: boolean
+        sso_enabled:
+          type: boolean
+        sso_saml_config:
+          nullable: true
+      required:
+      - created_at
+      - domain
+      - id
+      - name
+      - slug
+      - updated_at
+    PaginatedAPIKeyList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIKey'
+    PaginatedAuditLogList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
+    PaginatedFeedbackEventList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedbackEvent'
+    PaginatedFineTuningJobList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FineTuningJob'
+    PaginatedModelEvaluationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelEvaluation'
+    PaginatedOrganizationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+    PaginatedPatchList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Patch'
+    PaginatedRepositoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Repository'
+    PaginatedScanList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scan'
+    PaginatedUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PaginatedVerificationRunList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationRun'
+    PaginatedVulnerabilityList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vulnerability'
+    Patch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        suggested_by_agent:
+          type: string
+          maxLength: 100
+        diff_content:
+          type: string
+        explanation:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PatchStatusEnum'
+          readOnly: true
+        pull_request_url:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        vulnerability:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+      required:
+      - created_at
+      - diff_content
+      - explanation
+      - id
+      - pull_request_url
+      - status
+      - suggested_by_agent
+      - updated_at
+      - vulnerability
+    PatchStatusEnum:
+      enum:
+      - GENERATED
+      - VERIFYING
+      - VERIFIED
+      - PR_OPENED
+      - ACCEPTED
+      - REJECTED
+      type: string
+      description: |-
+        * `GENERATED` - Generated
+        * `VERIFYING` - Verifying
+        * `VERIFIED` - Verified
+        * `PR_OPENED` - PR Opened
+        * `ACCEPTED` - Accepted
+        * `REJECTED` - Rejected
+    PatchedAPIKey:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        name:
+          type: string
+          maxLength: 100
+        key_prefix:
+          type: string
+          readOnly: true
+        scopes: {}
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_revoked:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+    PatchedFeedbackEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        user_comments:
+          type: string
+          nullable: true
+        modified_diff:
+          type: string
+          nullable: true
+        patch:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        reviewed_by:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+          readOnly: true
+          nullable: true
+    PatchedOrganization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        domain:
+          type: string
+          maxLength: 255
+        subscription_plan:
+          $ref: '#/components/schemas/SubscriptionPlanEnum'
+        max_repositories:
+          type: integer
+        is_active:
+          type: boolean
+        sso_enabled:
+          type: boolean
+        sso_saml_config:
+          nullable: true
+    PatchedPatch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        suggested_by_agent:
+          type: string
+          maxLength: 100
+        diff_content:
+          type: string
+        explanation:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PatchStatusEnum'
+          readOnly: true
+        pull_request_url:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        vulnerability:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+    PatchedRepository:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        name:
+          type: string
+          maxLength: 255
+        full_name:
+          type: string
+          maxLength: 255
+        github_repo_id:
+          type: integer
+          nullable: true
+        clone_url:
+          nullable: true
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
+        default_branch:
+          type: string
+          maxLength: 100
+        is_private:
+          type: boolean
+        language:
+          type: string
+          maxLength: 50
+        ast_index_status:
+          allOf:
+          - $ref: '#/components/schemas/AstIndexStatusEnum'
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+          readOnly: true
+    PatchedScan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        trigger_source:
+          $ref: '#/components/schemas/TriggerSourceEnum'
+        commit_hash:
+          type: string
+          nullable: true
+          maxLength: 40
+        branch_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ScanStatusEnum'
+          readOnly: true
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        total_vulnerabilities:
+          type: integer
+          readOnly: true
+        repository:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        triggered_by:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+          nullable: true
+    PatchedUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        organization:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+          readOnly: true
+          nullable: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+    PatchedVulnerabilityUpdate:
+      type: object
+      properties:
+        is_false_positive:
+          type: boolean
+    Repository:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        name:
+          type: string
+          maxLength: 255
+        full_name:
+          type: string
+          maxLength: 255
+        github_repo_id:
+          type: integer
+          nullable: true
+        clone_url:
+          nullable: true
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
+        default_branch:
+          type: string
+          maxLength: 100
+        is_private:
+          type: boolean
+        language:
+          type: string
+          maxLength: 50
+        ast_index_status:
+          allOf:
+          - $ref: '#/components/schemas/AstIndexStatusEnum'
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+          readOnly: true
+      required:
+      - ast_index_status
+      - created_at
+      - full_name
+      - id
+      - name
+      - organization
+      - updated_at
+    RepositoryCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        full_name:
+          type: string
+          maxLength: 255
+        clone_url:
+          nullable: true
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
+        default_branch:
+          type: string
+          maxLength: 100
+        is_private:
+          type: boolean
+        language:
+          type: string
+          maxLength: 50
+      required:
+      - full_name
+      - name
+    RoleEnum:
+      enum:
+      - ORG_ADMIN
+      - SECURITY_LEAD
+      - DEVELOPER
+      - AUDITOR
+      type: string
+      description: |-
+        * `ORG_ADMIN` - Organization Admin
+        * `SECURITY_LEAD` - Security Lead
+        * `DEVELOPER` - Developer
+        * `AUDITOR` - Auditor
+    SastToolEnum:
+      enum:
+      - BANDIT
+      - SEMGREP
+      - PYTEST
+      - SYNTAX_CHECK
+      type: string
+      description: |-
+        * `BANDIT` - Bandit
+        * `SEMGREP` - Semgrep
+        * `PYTEST` - Pytest
+        * `SYNTAX_CHECK` - Syntax Check
+    Scan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        trigger_source:
+          $ref: '#/components/schemas/TriggerSourceEnum'
+        commit_hash:
+          type: string
+          nullable: true
+          maxLength: 40
+        branch_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ScanStatusEnum'
+          readOnly: true
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        total_vulnerabilities:
+          type: integer
+          readOnly: true
+        repository:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        triggered_by:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+          nullable: true
+      required:
+      - completed_at
+      - created_at
+      - id
+      - repository
+      - started_at
+      - status
+      - total_vulnerabilities
+      - updated_at
+    ScanCreate:
+      type: object
+      properties:
+        repository:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        branch_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        commit_hash:
+          type: string
+          nullable: true
+          maxLength: 40
+      required:
+      - repository
+    ScanStatusEnum:
+      enum:
+      - QUEUED
+      - IN_PROGRESS
+      - COMPLETED
+      - FAILED
+      type: string
+      description: |-
+        * `QUEUED` - Queued
+        * `IN_PROGRESS` - In Progress
+        * `COMPLETED` - Completed
+        * `FAILED` - Failed
+    SeverityEnum:
+      enum:
+      - CRITICAL
+      - HIGH
+      - MEDIUM
+      - LOW
+      - INFO
+      type: string
+      description: |-
+        * `CRITICAL` - Critical
+        * `HIGH` - High
+        * `MEDIUM` - Medium
+        * `LOW` - Low
+        * `INFO` - Info
+    SubscriptionPlanEnum:
+      enum:
+      - ENTERPRISE_TRIAL
+      - ENTERPRISE_PRO
+      - ENTERPRISE_CUSTOM
+      type: string
+      description: |-
+        * `ENTERPRISE_TRIAL` - Enterprise Trial
+        * `ENTERPRISE_PRO` - Enterprise Pro
+        * `ENTERPRISE_CUSTOM` - Enterprise Custom
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TriggerSourceEnum:
+      enum:
+      - MANUAL
+      - WEBHOOK
+      - API_KEY
+      - SCHEDULE
+      type: string
+      description: |-
+        * `MANUAL` - Manual
+        * `WEBHOOK` - Webhook
+        * `API_KEY` - API Key
+        * `SCHEDULE` - Schedule
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        organization:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+          readOnly: true
+          nullable: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+      required:
+      - created_at
+      - email
+      - first_name
+      - id
+      - is_active
+      - last_name
+      - organization
+      - role
+    VerificationRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        sast_tool:
+          $ref: '#/components/schemas/SastToolEnum'
+        passed:
+          type: boolean
+        execution_time_seconds:
+          type: number
+          format: double
+        exit_code:
+          type: integer
+        stdout_log:
+          type: string
+          nullable: true
+        stderr_log:
+          type: string
+          nullable: true
+        security_score:
+          type: integer
+        executed_at:
+          type: string
+          format: date-time
+          readOnly: true
+        patch:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+      required:
+      - created_at
+      - executed_at
+      - id
+      - patch
+      - sast_tool
+      - updated_at
+    Vulnerability:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of most recent record modification.
+        cwe_id:
+          type: string
+          nullable: true
+          maxLength: 20
+        owasp_category:
+          type: string
+          nullable: true
+          maxLength: 100
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        severity:
+          $ref: '#/components/schemas/SeverityEnum'
+        confidence_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,4})?$
+        file_path:
+          type: string
+          maxLength: 1024
+        line_start:
+          type: integer
+        line_end:
+          type: integer
+        snippet:
+          type: string
+        is_false_positive:
+          type: boolean
+        scan:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+      required:
+      - created_at
+      - description
+      - file_path
+      - id
+      - line_end
+      - line_start
+      - scan
+      - severity
+      - snippet
+      - title
+      - updated_at
+    VulnerabilityUpdate:
+      type: object
+      properties:
+        is_false_positive:
+          type: boolean
+    ZipUpload:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Globally unique UUIDv4 identifier for this entity.
+        repository:
+          type: string
+          format: uuid
+          description: Globally unique UUIDv4 identifier for this entity.
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ZipUploadStatusEnum'
+          readOnly: true
+        s3_object_key:
+          type: string
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Immutable timestamp of initial record creation.
+        file:
+          type: string
+          format: uri
+          writeOnly: true
+      required:
+      - created_at
+      - file
+      - id
+      - repository
+      - s3_object_key
+      - status
+    ZipUploadStatusEnum:
+      enum:
+      - PENDING
+      - EXTRACTING
+      - COMPLETED
+      - FAILED
+      type: string
+      description: |-
+        * `PENDING` - Pending
+        * `EXTRACTING` - Extracting
+        * `COMPLETED` - Completed
+        * `FAILED` - Failed
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
