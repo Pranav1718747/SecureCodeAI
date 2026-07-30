@@ -37,7 +37,7 @@ class SecurityAgent(BaseAgent):
     def analyze_file_content(
         self, file_path: str, content: str, knowledge_context: Optional[str] = None
     ) -> list[Finding]:
-        """Analyze a single code file using heuristic detectors.
+        """Analyze a single code file using heuristic detectors and LLM.
 
         Args:
             file_path: Target file path.
@@ -52,7 +52,26 @@ class SecurityAgent(BaseAgent):
         # 1. Run pattern heuristics
         findings = scan_file_heuristics(file_path, content)
 
-        # 2. Filter findings below confidence threshold
+        # 2. Invoke LLM for deep logical reasoning
+        import os
+        _, ext = os.path.splitext(file_path)
+        language = ext.lstrip(".") or "plaintext"
+        
+        prompt = SECURITY_SYSTEM_PROMPT.format(
+            file_path=file_path,
+            language=language,
+            knowledge_context=knowledge_context or "No additional context.",
+            source_code=content
+        )
+        
+        try:
+            llm_result = self.invoke(prompt=prompt, response_schema=SecurityAnalysisResult)
+            if llm_result and hasattr(llm_result, "findings"):
+                findings.extend(llm_result.findings)
+        except Exception as e:
+            logger.warning("security_agent.analyze_file.llm_failed", file_path=file_path, error=str(e))
+
+        # 3. Filter findings below confidence threshold
         valid_findings = [
             f for f in findings if f.confidence >= self.confidence_threshold
         ]

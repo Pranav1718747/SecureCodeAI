@@ -25,6 +25,7 @@ Analyze the following source code line-by-line and identify all security vulnera
 - Do NOT flag standard non-vulnerable code (prevent false positives).
 - Assign a confidence score between 0.0 and 1.0 (filter out any findings below 0.3).
 - Include the precise line number for every vulnerability finding.
+- IMPORTANT: Do not stop after finding one vulnerability. Exhaustively scan the entire file and return a comprehensive list of ALL vulnerabilities discovered.
 </constraints>
 
 <output_format>
@@ -41,7 +42,8 @@ Analyze the following source code line-by-line and identify all security vulnera
       "description": "Raw string formatting in SQL query execution.",
       "explanation": "Constructing SQL queries via string interpolation allows attackers to execute unauthorized commands.",
       "code_snippet": "cursor.execute(f'SELECT * FROM users WHERE id = {{user_id}}')"
-    }}
+    }},
+    // ... additional findings here ...
   ]
 }}
 </output_format>

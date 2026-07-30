@@ -30,11 +30,15 @@ class WorkflowState(BaseModel):
     """Global state container passed across nodes in the LangGraph graph."""
 
     repository_id: UUID
+    scan_id: Optional[str] = None
     repository_url: str = ""
     local_repo_path: str = ""
     branch: str = "main"
     file_tree: list[str] = Field(default_factory=list)
     scan_plan: Optional[Any] = None
+    files_to_scan: list[str] = Field(default_factory=list)
+    total_files: int = 0
+    processed_files: int = 0
     findings: list[Any] = Field(default_factory=list)
     knowledge_context: list[Any] = Field(default_factory=list)
     patches: list[Any] = Field(default_factory=list)

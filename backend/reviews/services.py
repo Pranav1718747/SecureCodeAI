@@ -76,6 +76,7 @@ class ScanOrchestrationService:
             
             state = WorkflowState(
                 repository_id=scan.repository.id,
+                scan_id=str(scan.id),
                 repository_url=repo_url,
                 local_repo_path=local_repo_path,
                 branch=branch,
@@ -88,33 +89,22 @@ class ScanOrchestrationService:
             # Cleanup
             temp_dir_obj.cleanup()
             
-            vulnerabilities = []
-            for finding in final_state.findings:
-                vuln = Vulnerability(
-                    scan=scan,
-                    cwe_id=getattr(finding, 'cwe_id', ''),
-                    owasp_category=finding.owasp_category.value if hasattr(finding.owasp_category, 'value') else str(finding.owasp_category),
-                    title=finding.vulnerability_type,
-                    description=f"{finding.description}\n\nExplanation: {finding.explanation}",
-                    severity=finding.severity.value if hasattr(finding.severity, 'value') else str(finding.severity),
-                    confidence_score=finding.confidence,
-                    file_path=finding.file_path,
-                    line_start=finding.line_number,
-                    line_end=finding.line_number,
-                    snippet=finding.code_snippet
-                )
-                vulnerabilities.append(vuln)
-                
-            if vulnerabilities:
-                Vulnerability.objects.bulk_create(vulnerabilities)
-                
-            scan.total_vulnerabilities = len(vulnerabilities)
+            # Vulnerabilities are now created incrementally by the StreamAgent
+            # We just need to update the final status
             scan.status = 'COMPLETED'
             
         except Exception as e:
             logger.error("execute_scan.failed", scan_id=scan_id, error=str(e), traceback=traceback.format_exc())
             scan.status = 'FAILED'
             
+            # Extract meaningful error message for the UI
+            import subprocess
+            if isinstance(e, subprocess.CalledProcessError):
+                error_msg = e.stderr.decode('utf-8') if e.stderr else str(e)
+                scan.error_message = f"Git Clone Failed: {error_msg.strip()}"
+            else:
+                scan.error_message = f"Analysis Failed: {str(e)}"
+                
         finally:
             scan.completed_at = timezone.now()
             scan.save()

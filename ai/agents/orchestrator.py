@@ -19,9 +19,8 @@ class ScanOrchestrator:
 
     def __init__(self) -> None:
         self.planner_agent = PlannerAgent()
-        self.security_agent = SecurityAgent()
-        self.knowledge_agent = KnowledgeAgent()
-        self.critic_agent = CriticAgent()
+        from ai.agents.stream_agent import StreamAgent
+        self.stream_agent = StreamAgent()
         self._compiled_graph: Any = None
 
     def build_graph(self) -> Any:
@@ -35,22 +34,28 @@ class ScanOrchestrator:
 
         # 1. Add agent nodes
         workflow.add_node("plan_scan", self.planner_agent.run)
-        workflow.add_node("analyse_security", self.security_agent.run)
-        workflow.add_node("retrieve_knowledge", self.knowledge_agent.run)
-        workflow.add_node("validate_findings", self.critic_agent.run)
+        workflow.add_node("process_file", self.stream_agent.run)
 
         # 2. Add graph edges
         workflow.add_edge(START, "plan_scan")
-        workflow.add_edge("plan_scan", "analyse_security")
-        workflow.add_edge("analyse_security", "retrieve_knowledge")
-        workflow.add_edge("retrieve_knowledge", "validate_findings")
+        workflow.add_edge("plan_scan", "process_file")
 
         # 3. Add conditional routing edge
+        def should_continue(state: Any) -> str:
+            if isinstance(state, dict):
+                files_left = len(state.get("files_to_scan", []))
+            else:
+                files_left = len(getattr(state, "files_to_scan", []))
+                
+            if files_left > 0:
+                return "process_file"
+            return "__end__"
+
         workflow.add_conditional_edges(
-            "validate_findings",
-            should_retry_security,
+            "process_file",
+            should_continue,
             {
-                "analyse_security": "analyse_security",
+                "process_file": "process_file",
                 "__end__": END,
             },
         )

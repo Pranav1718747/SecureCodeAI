@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { scanService } from '../services/scanService';
 import { patchService } from '../services/patchService';
 import { Scan, Vulnerability, Patch } from '../types/scan';
-import { ShieldAlert, ArrowLeft, Loader2, AlertCircle, Wand2, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Loader2, AlertCircle, Wand2, CheckCircle2, Clock, Folder, File, Activity, Zap, Search } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export const ReviewPage = () => {
@@ -14,12 +14,76 @@ export const ReviewPage = () => {
   const [selectedVuln, setSelectedVuln] = useState<Vulnerability | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPatching, setIsPatching] = useState<Record<string, boolean>>({});
+  const [progress, setProgress] = useState({ processed_files: 0, total_files: 0 });
+  const [currentFile, setCurrentFile] = useState<string | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (scanId) {
       fetchData();
     }
   }, [scanId]);
+
+  useEffect(() => {
+    if (scan && (scan.status === 'IN_PROGRESS' || scan.status === 'QUEUED')) {
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [scan?.status]);
+
+  useEffect(() => {
+    if (!scanId || !scan || (scan.status !== 'IN_PROGRESS' && scan.status !== 'QUEUED')) {
+      return;
+    }
+
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = window.location.hostname === 'localhost' ? 'localhost:8000' : window.location.host;
+    const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/scans/${scanId}/`);
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.type === 'scan_update') {
+        const payload = message.data;
+        
+        if (payload.progress) {
+          setProgress(payload.progress);
+        }
+        
+        if (payload.file) {
+          setCurrentFile(payload.file);
+        }
+        
+        if (payload.type === 'new_vulnerability' && payload.vulnerability) {
+          setVulnerabilities(prev => {
+            if (prev.some(v => v.id === payload.vulnerability.id)) return prev;
+            return [...prev, payload.vulnerability];
+          });
+          
+          setSelectedVuln(prev => {
+            if (!prev) return payload.vulnerability;
+            return prev;
+          });
+        }
+        
+        // Handle scan completion
+        if (payload.status === 'COMPLETED' || payload.status === 'FAILED') {
+          fetchData(); // Fetch the final state
+        }
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [scanId, scan?.status]);
 
   const fetchData = async () => {
     try {
@@ -36,7 +100,6 @@ export const ReviewPage = () => {
       
       if (vulnsData.results.length > 0) {
         setSelectedVuln(vulnsData.results[0]);
-        // Fetch patches for all vulns (simplification for MVP)
         const patchesData = await patchService.getPatches();
         const patchesMap: Record<string, Patch> = {};
         patchesData.results.forEach(p => {
@@ -55,7 +118,6 @@ export const ReviewPage = () => {
     try {
       setIsPatching(prev => ({ ...prev, [vulnId]: true }));
       await patchService.generatePatch(vulnId);
-      // In a real app we'd poll or use websockets. For MVP, we wait a bit then refresh
       setTimeout(() => {
         fetchData();
         setIsPatching(prev => ({ ...prev, [vulnId]: false }));
@@ -66,12 +128,181 @@ export const ReviewPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !scan) {
     return <div className="flex justify-center h-64 items-center"><Loader2 className="h-8 w-8 text-blue-500 animate-spin" /></div>;
   }
 
   if (!scan) return <div>Scan not found</div>;
 
+  const isLive = scan.status === 'IN_PROGRESS' || scan.status === 'QUEUED';
+  
+  // Calculate Progress metrics
+  const progressPct = progress.total_files > 0 ? (progress.processed_files / progress.total_files) * 100 : 0;
+  
+  // Calculate ETA
+  let etaSeconds = 0;
+  if (progress.processed_files > 0 && elapsedSeconds > 0) {
+    const filesPerSecond = progress.processed_files / elapsedSeconds;
+    const remainingFiles = progress.total_files - progress.processed_files;
+    etaSeconds = Math.round(remainingFiles / filesPerSecond);
+  }
+
+  const formatTime = (secs: number) => {
+    if (!secs || isNaN(secs) || secs < 0) return "--";
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}m ${s}s`;
+  };
+  
+  // Parse current file
+  let currentFolder = "Preparing...";
+  let currentFileName = "Waiting...";
+  let currentPhase = scan.status === 'QUEUED' ? 'Queued for processing' : 'Analyzing Repository Structure';
+  
+  if (currentFile) {
+    const parts = currentFile.split('/');
+    currentFileName = parts.pop() || '';
+    currentFolder = parts.length > 0 ? parts.join('/') + '/' : '/';
+    currentPhase = 'Checking for Vulnerabilities';
+  }
+
+  if (isLive) {
+    return (
+      <div className="flex flex-col h-[calc(100vh-8rem)]">
+        <div className="flex items-center gap-4 mb-6">
+          <Link to={`/repository/${scan.repository}`} className="p-2 hover:bg-slate-800 rounded-md text-slate-400 hover:text-white transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+              Live Scan Dashboard
+              <span className="flex h-3 w-3 relative ml-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+              </span>
+            </h1>
+            <p className="text-sm text-slate-400">Streaming real-time analysis updates</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-6 mb-6">
+          {/* Progress Widget */}
+          <div className="col-span-2 bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-lg">
+            <div className="flex justify-between items-end mb-4">
+              <div>
+                <h3 className="text-slate-400 text-sm font-medium mb-1">Scanning Progress</h3>
+                <div className="text-3xl font-bold text-white">{progressPct.toFixed(0)}%</div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-slate-400 mb-1">Files Processed</div>
+                <div className="text-xl font-semibold text-slate-200">
+                  {progress.processed_files} / {progress.total_files || '--'}
+                </div>
+              </div>
+            </div>
+            
+            <div className="w-full bg-slate-800 rounded-full h-3 mb-6 overflow-hidden relative">
+              <div 
+                className="bg-blue-500 h-full rounded-full transition-all duration-300 ease-out relative overflow-hidden"
+                style={{ width: `${Math.max(2, progressPct)}%` }}
+              >
+                <div className="absolute top-0 bottom-0 left-0 right-0 bg-white/20 animate-pulse"></div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 flex items-start gap-3">
+                <Folder className="h-5 w-5 text-blue-400 mt-0.5" />
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Current Folder</div>
+                  <div className="text-sm text-slate-300 truncate" title={currentFolder}>{currentFolder}</div>
+                </div>
+              </div>
+              <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/50 flex items-start gap-3">
+                <File className="h-5 w-5 text-blue-400 mt-0.5" />
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Current File</div>
+                  <div className="text-sm text-slate-300 truncate" title={currentFileName}>{currentFileName}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Metrics Widget */}
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-lg flex flex-col justify-between">
+            <div>
+              <h3 className="text-slate-400 text-sm font-medium mb-4 flex items-center gap-2">
+                <Activity className="h-4 w-4" /> Current Stage
+              </h3>
+              <div className="text-lg font-medium text-blue-400 mb-6">{currentPhase}</div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <Clock className="h-4 w-4" /> Elapsed Time
+                </span>
+                <span className="text-white font-mono">{formatTime(elapsedSeconds)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <Zap className="h-4 w-4" /> Est. Remaining
+                </span>
+                <span className="text-white font-mono">{progress.processed_files > 0 ? formatTime(etaSeconds) : "Calculating..."}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Vulnerability Stream */}
+        <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl shadow-lg flex flex-col min-h-0">
+          <div className="p-4 border-b border-slate-800 flex justify-between items-center">
+            <h2 className="font-semibold text-white flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-red-400" />
+              Live Findings Stream
+            </h2>
+            <div className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full text-sm font-medium">
+              {vulnerabilities.length} Vulnerabilities Detected
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {vulnerabilities.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-500">
+                <Search className="h-10 w-10 mb-3 opacity-20 animate-pulse" />
+                <p>Scanning code... Any findings will appear here instantly.</p>
+              </div>
+            ) : (
+              [...vulnerabilities].reverse().map(vuln => (
+                <div key={vuln.id} className="bg-slate-950 p-4 rounded-lg border border-slate-800/80 hover:border-slate-700 transition-colors animate-in slide-in-from-top-2 fade-in duration-300">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                        vuln.severity === 'CRITICAL' ? 'bg-red-900/50 text-red-400' :
+                        vuln.severity === 'HIGH' ? 'bg-orange-900/50 text-orange-400' :
+                        vuln.severity === 'MEDIUM' ? 'bg-amber-900/50 text-amber-400' :
+                        'bg-slate-800 text-slate-400'
+                      }`}>
+                        {vuln.severity}
+                      </span>
+                      <h3 className="font-medium text-slate-200 text-sm">{vuln.title}</h3>
+                    </div>
+                    <span className="text-xs text-slate-500 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> CWE-{vuln.cwe_id}
+                    </span>
+                  </div>
+                  <div className="text-xs text-blue-400 font-mono bg-blue-900/10 px-2 py-1 rounded inline-block">
+                    {vuln.file_path}:{vuln.line_start}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Completed/Failed Review Mode (Original UI)
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <div className="flex items-center gap-4 mb-6">
@@ -82,7 +313,7 @@ export const ReviewPage = () => {
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
             Scan Review
             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-              scan.status === 'COMPLETED' ? 'bg-emerald-900/50 text-emerald-400' : 'bg-slate-800 text-slate-400'
+              scan.status === 'COMPLETED' ? 'bg-emerald-900/50 text-emerald-400' : 'bg-red-900/50 text-red-400'
             }`}>
               {scan.status}
             </span>
@@ -91,8 +322,13 @@ export const ReviewPage = () => {
         </div>
       </div>
 
+      {scan.status === 'FAILED' && scan.error_message && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 font-mono text-sm whitespace-pre-wrap">
+          {scan.error_message}
+        </div>
+      )}
+
       <div className="flex gap-6 flex-1 min-h-0">
-        {/* Left Sidebar - Vulnerability List */}
         <div className="w-1/3 bg-slate-900 border border-slate-800 rounded-xl overflow-y-auto flex flex-col">
           <div className="p-4 border-b border-slate-800">
             <h2 className="font-semibold text-white">Vulnerabilities</h2>
@@ -131,7 +367,6 @@ export const ReviewPage = () => {
           </div>
         </div>
 
-        {/* Right Panel - Vulnerability Details & Patching */}
         <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
           {selectedVuln ? (
             <>

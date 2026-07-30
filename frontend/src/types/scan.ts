@@ -9,6 +9,7 @@ export interface Scan {
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
+  error_message?: string;
 }
 
 export interface Vulnerability {

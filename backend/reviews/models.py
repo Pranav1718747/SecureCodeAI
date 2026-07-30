@@ -34,6 +34,7 @@ class Scan(TimeStampedModel):
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     total_vulnerabilities = models.IntegerField(default=0)
+    error_message = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"Scan {self.id} for {self.repository.name}"

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { repositoryService } from '../services/repositoryService';
 import { scanService } from '../services/scanService';
 import { Repository } from '../types/repository';
@@ -8,6 +8,7 @@ import { Github, Play, GitBranch, Clock, AlertCircle, ShieldAlert, Loader2, Sear
 
 export const RepositoryPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [repo, setRepo] = useState<Repository | null>(null);
   const [scans, setScans] = useState<Scan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,6 +20,24 @@ export const RepositoryPage = () => {
       fetchData();
     }
   }, [id]);
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    const hasActiveScans = scans.some(s => s.status === 'IN_PROGRESS' || s.status === 'QUEUED');
+    
+    if (id && hasActiveScans) {
+      intervalId = setInterval(() => {
+        // Silently fetch scans without triggering full page loading state
+        scanService.getScans(id).then(scansData => {
+          setScans(scansData.results);
+        }).catch(err => console.error('Failed to poll scans', err));
+      }, 3000);
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [id, scans]);
 
   const fetchData = async () => {
     try {
@@ -41,11 +60,10 @@ export const RepositoryPage = () => {
     try {
       if (!id) return;
       setIsScanning(true);
-      await scanService.triggerScan(id);
-      await fetchData(); // Refresh list to show new QUEUED scan
+      const newScan = await scanService.triggerScan(id);
+      navigate(`/review/${newScan.id}`);
     } catch (err: any) {
       alert(err.message || 'Failed to trigger scan');
-    } finally {
       setIsScanning(false);
     }
   };
@@ -129,46 +147,54 @@ export const RepositoryPage = () => {
               <Link 
                 key={scan.id} 
                 to={`/review/${scan.id}`}
-                className="flex items-center justify-between p-4 hover:bg-slate-800/50 transition-colors group"
+                className="flex flex-col p-4 hover:bg-slate-800/50 transition-colors group"
               >
-                <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-full ${
-                    scan.status === 'COMPLETED' ? 'bg-emerald-900/50 text-emerald-400' :
-                    scan.status === 'IN_PROGRESS' ? 'bg-blue-900/50 text-blue-400 animate-pulse' :
-                    scan.status === 'FAILED' ? 'bg-red-900/50 text-red-400' :
-                    'bg-slate-800 text-slate-400'
-                  }`}>
-                    {scan.status === 'IN_PROGRESS' ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldAlert className="h-5 w-5" />}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-full ${
+                      scan.status === 'COMPLETED' ? 'bg-emerald-900/50 text-emerald-400' :
+                      scan.status === 'IN_PROGRESS' ? 'bg-blue-900/50 text-blue-400 animate-pulse' :
+                      scan.status === 'FAILED' ? 'bg-red-900/50 text-red-400' :
+                      'bg-slate-800 text-slate-400'
+                    }`}>
+                      {scan.status === 'IN_PROGRESS' ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldAlert className="h-5 w-5" />}
+                    </div>
+                    <div>
+                      <h4 className="text-white font-medium group-hover:text-blue-400 transition-colors">
+                        Scan #{scan.id.split('-')[0]}
+                      </h4>
+                      <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                        <span className="flex items-center gap-1">
+                          <GitBranch className="h-3 w-3" />
+                          {scan.branch_name}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(scan.created_at || scan.started_at || Date.now()).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-white font-medium group-hover:text-blue-400 transition-colors">
-                      Scan #{scan.id.split('-')[0]}
-                    </h4>
-                    <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
-                      <span className="flex items-center gap-1">
-                        <GitBranch className="h-3 w-3" />
-                        {scan.branch_name}
+                  
+                  <div className="flex items-center gap-6 text-sm">
+                    <div className="flex flex-col items-end">
+                      <span className="text-slate-400 text-xs">Vulnerabilities</span>
+                      <span className={`font-semibold ${scan.total_vulnerabilities > 0 ? 'text-red-400' : 'text-slate-300'}`}>
+                        {scan.status === 'COMPLETED' ? scan.total_vulnerabilities : '-'}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(scan.created_at).toLocaleString()}
-                      </span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-slate-400 text-xs">Status</span>
+                      <span className="font-medium text-slate-300">{scan.status}</span>
                     </div>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-6 text-sm">
-                  <div className="flex flex-col items-end">
-                    <span className="text-slate-400 text-xs">Vulnerabilities</span>
-                    <span className={`font-semibold ${scan.total_vulnerabilities > 0 ? 'text-red-400' : 'text-slate-300'}`}>
-                      {scan.status === 'COMPLETED' ? scan.total_vulnerabilities : '-'}
-                    </span>
+
+                {scan.status === 'FAILED' && scan.error_message && (
+                  <div className="mt-3 ml-14 p-3 bg-red-500/10 border border-red-500/20 rounded-md text-red-400 text-xs font-mono whitespace-pre-wrap">
+                    {scan.error_message}
                   </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-slate-400 text-xs">Status</span>
-                    <span className="font-medium text-slate-300">{scan.status}</span>
-                  </div>
-                </div>
+                )}
               </Link>
             ))}
           </div>

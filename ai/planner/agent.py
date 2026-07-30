@@ -86,7 +86,18 @@ class PlannerAgent(BaseAgent):
         logger.info("planner_agent.run.started", repository_id=str(state.repository_id))
         try:
             plan = self.generate_plan(state.file_tree)
-            return {"scan_plan": plan}
+            
+            # Flatten all batch files into a single queue for incremental scanning
+            files_to_scan = []
+            for batch in plan.batches:
+                files_to_scan.extend(batch.files)
+                
+            return {
+                "scan_plan": plan,
+                "files_to_scan": files_to_scan,
+                "total_files": len(files_to_scan),
+                "processed_files": 0
+            }
         except Exception as e:
             logger.error("planner_agent.run.failed", error=str(e))
             err = AgentError(
