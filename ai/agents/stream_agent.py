@@ -96,6 +96,7 @@ class StreamAgent:
                         "data": {
                             "type": "batch_vulnerabilities",
                             "vulnerabilities": vuln_data_list,
+                            "scanner": "AI Analysis",
                             "progress": {
                                 "processed_files": processed_files,
                                 "total_files": total_files
@@ -119,6 +120,7 @@ class StreamAgent:
                         "data": {
                             "type": "progress",
                             "file": file_path,
+                            "scanner": "AI Analysis",
                             "progress": {
                                 "processed_files": processed_files,
                                 "total_files": total_files

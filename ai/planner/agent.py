@@ -92,6 +92,28 @@ class PlannerAgent(BaseAgent):
             for batch in plan.batches:
                 files_to_scan.extend(batch.files)
                 
+            # Emit a websocket update to start the progress bar on the frontend immediately
+            try:
+                from channels.layers import get_channel_layer
+                from asgiref.sync import async_to_sync
+                channel_layer = get_channel_layer()
+                if channel_layer and state.scan_id:
+                    async_to_sync(channel_layer.group_send)(
+                        f"scan_{state.scan_id}",
+                        {
+                            "type": "scan_update",
+                            "data": {
+                                "type": "progress",
+                                "progress": {
+                                    "processed_files": 0,
+                                    "total_files": len(files_to_scan)
+                                }
+                            }
+                        }
+                    )
+            except Exception as e:
+                logger.error("planner_agent.ws_emit.failed", error=str(e))
+                
             return {
                 "scan_plan": plan,
                 "files_to_scan": files_to_scan,
