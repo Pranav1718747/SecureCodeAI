@@ -1,10 +1,22 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { repositoryService } from '../services/repositoryService';
 import { scanService } from '../services/scanService';
 import { Repository } from '../types/repository';
 import { Scan } from '../types/scan';
-import { Github, Play, GitBranch, Clock, AlertCircle, ShieldAlert, Loader2, Search } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+
+// New Modular Components
+import { RepositoryHeader } from '../components/repository/RepositoryHeader';
+import { ActionToolbar } from '../components/repository/ActionToolbar';
+import { RepositoryHealth } from '../components/repository/RepositoryHealth';
+import { RepositoryMetrics } from '../components/repository/RepositoryMetrics';
+import { FilterToolbar } from '../components/repository/FilterToolbar';
+import { ScanHistoryCard } from '../components/repository/ScanHistoryCard';
+import { RunningScanCard } from '../components/repository/RunningScanCard';
+import { ActivityTimeline } from '../components/repository/ActivityTimeline';
+import { EmptyState } from '../components/repository/EmptyState';
+import { ErrorCard } from '../components/repository/ErrorCard';
 
 export const RepositoryPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,6 +54,7 @@ export const RepositoryPage = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       if (!id) return;
       const [repoData, scansData] = await Promise.all([
         repositoryService.getRepository(id),
@@ -63,6 +76,7 @@ export const RepositoryPage = () => {
       const newScan = await scanService.triggerScan(id);
       navigate(`/review/${newScan.id}`);
     } catch (err: any) {
+      // In a real app, use a toast notification instead of alert
       alert(err.message || 'Failed to trigger scan');
       setIsScanning(false);
     }
@@ -70,135 +84,67 @@ export const RepositoryPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <div className="relative">
+          <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full" />
+          <Loader2 className="h-10 w-10 text-blue-500 animate-spin relative z-10" />
+        </div>
+        <p className="text-slate-400 font-medium animate-pulse">Loading workspace...</p>
       </div>
     );
   }
 
   if (error || !repo) {
     return (
-      <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-md flex items-center gap-3">
-        <AlertCircle className="h-5 w-5 flex-shrink-0" />
-        <p>{error || 'Repository not found'}</p>
+      <div className="max-w-3xl mx-auto mt-12">
+        <ErrorCard error={error || 'Repository not found'} onRetry={fetchData} />
       </div>
     );
   }
 
+  // Derive metrics
+  const totalVulnerabilities = scans.reduce((acc, scan) => acc + (scan.total_vulnerabilities || 0), 0);
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex items-center justify-between bg-slate-900 border border-slate-800 p-6 rounded-xl">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-800 rounded-lg">
-            <Github className="h-8 w-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white">{repo.name}</h1>
-            <a 
-              href={repo.clone_url.replace('.git', '')} 
-              target="_blank" 
-              rel="noreferrer"
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              {repo.full_name}
-            </a>
-          </div>
+    <div className="max-w-7xl mx-auto space-y-6 pb-20 animate-in fade-in duration-500">
+      <RepositoryHeader repo={repo} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <RepositoryHealth scans={scans} />
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col items-end mr-4">
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <GitBranch className="h-4 w-4" />
-              <span>{repo.default_branch}</span>
-            </div>
-            <div className="text-xs text-slate-500 mt-1">
-              {repo.language}
-            </div>
-          </div>
-          <button 
-            onClick={handleTriggerScan}
-            disabled={isScanning}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-md font-medium transition-colors shadow-sm disabled:opacity-50"
-          >
-            {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4 fill-white" />}
-            Run AI Scan
-          </button>
+        <div className="lg:col-span-1">
+          <ActionToolbar onScan={handleTriggerScan} isScanning={isScanning} />
         </div>
       </div>
 
-      {/* Scans List */}
-      <div>
-        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <Search className="h-5 w-5 text-slate-400" />
-          Security Scans
-        </h2>
-        
-        {scans.length === 0 ? (
-          <div className="bg-slate-900 rounded-lg border border-slate-800 p-12 text-center">
-            <ShieldAlert className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">No scans found</h3>
-            <p className="text-slate-400 mb-6 max-w-sm mx-auto">
-              Run an AI security scan to analyze this repository for vulnerabilities.
-            </p>
-          </div>
-        ) : (
-          <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden divide-y divide-slate-800">
-            {scans.map((scan) => (
-              <Link 
-                key={scan.id} 
-                to={`/review/${scan.id}`}
-                className="flex flex-col p-4 hover:bg-slate-800/50 transition-colors group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-full ${
-                      scan.status === 'COMPLETED' ? 'bg-emerald-900/50 text-emerald-400' :
-                      scan.status === 'IN_PROGRESS' ? 'bg-blue-900/50 text-blue-400 animate-pulse' :
-                      scan.status === 'FAILED' ? 'bg-red-900/50 text-red-400' :
-                      'bg-slate-800 text-slate-400'
-                    }`}>
-                      {scan.status === 'IN_PROGRESS' ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldAlert className="h-5 w-5" />}
-                    </div>
-                    <div>
-                      <h4 className="text-white font-medium group-hover:text-blue-400 transition-colors">
-                        Scan #{scan.id.split('-')[0]}
-                      </h4>
-                      <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
-                        <span className="flex items-center gap-1">
-                          <GitBranch className="h-3 w-3" />
-                          {scan.branch_name}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {new Date(scan.created_at || scan.started_at || Date.now()).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-6 text-sm">
-                    <div className="flex flex-col items-end">
-                      <span className="text-slate-400 text-xs">Vulnerabilities</span>
-                      <span className={`font-semibold ${scan.total_vulnerabilities > 0 ? 'text-red-400' : 'text-slate-300'}`}>
-                        {scan.status === 'COMPLETED' ? scan.total_vulnerabilities : '-'}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="text-slate-400 text-xs">Status</span>
-                      <span className="font-medium text-slate-300">{scan.status}</span>
-                    </div>
-                  </div>
-                </div>
+      <RepositoryMetrics totalScans={scans.length} totalVulnerabilities={totalVulnerabilities} />
 
-                {scan.status === 'FAILED' && scan.error_message && (
-                  <div className="mt-3 ml-14 p-3 bg-red-500/10 border border-red-500/20 rounded-md text-red-400 text-xs font-mono whitespace-pre-wrap">
-                    {scan.error_message}
-                  </div>
-                )}
-              </Link>
-            ))}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pt-6 border-t border-slate-800/50 mt-8">
+        {/* Main Content Area (History) */}
+        <div className="lg:col-span-3 space-y-6">
+          <FilterToolbar />
+          
+          {scans.length === 0 ? (
+            <EmptyState onScan={handleTriggerScan} isScanning={isScanning} />
+          ) : (
+            <div className="space-y-4">
+              {scans.map((scan) => {
+                if (scan.status === 'IN_PROGRESS' || scan.status === 'QUEUED') {
+                  return <RunningScanCard key={scan.id} scan={scan} />;
+                }
+                return <ScanHistoryCard key={scan.id} scan={scan} />;
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar Activity Timeline */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-24">
+            <ActivityTimeline />
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
