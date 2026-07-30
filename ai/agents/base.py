@@ -30,7 +30,7 @@ class BaseAgent(ABC):
 
     def __init__(
         self,
-        model_id: str = "llama-3.3-70b-versatile",
+        model_id: str = "llama-3.1-8b-instant",
         temperature: float = 0.0,
         region_name: str = "us-east-1",  # Kept for backward compatibility
         max_tokens: int = 4096,

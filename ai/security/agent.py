@@ -21,7 +21,7 @@ class SecurityAgent(BaseAgent):
 
     def __init__(
         self,
-        model_id: str = "llama-3.3-70b-versatile",
+        model_id: str = "llama-3.1-8b-instant",
         temperature: float = 0.0,
         region_name: str = "us-east-1",
         confidence_threshold: float = 0.3,
