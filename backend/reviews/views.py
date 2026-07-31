@@ -22,7 +22,11 @@ class ScanViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if not self.request.user.organization:
             return Scan.objects.none()
-        return Scan.objects.filter(repository__organization=self.request.user.organization)
+        qs = Scan.objects.filter(repository__organization=self.request.user.organization)
+        repo_param = self.request.query_params.get('repository') or self.request.query_params.get('repository_id')
+        if repo_param:
+            qs = qs.filter(repository_id=repo_param)
+        return qs
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

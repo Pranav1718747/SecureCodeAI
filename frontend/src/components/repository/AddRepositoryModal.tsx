@@ -157,17 +157,17 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#09111F]/80 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#070B16]/80 backdrop-blur-sm">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="bg-[#111827] border border-white/[0.08] shadow-[0_25px_60px_rgba(0,0,0,0.5)] rounded-[24px] w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+          className="bg-[#111827] border border-white/[0.08] shadow-[0_25px_60px_rgba(0,0,0,0.5)] rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-white/[0.06] bg-[#0F172A]/50">
+          <div className="flex items-center justify-between p-6 border-b border-white/[0.08] bg-[#151E2D]/50">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-[#10B981]/10 border border-[#10B981]/20 rounded-xl text-[#10B981]">
+              <div className="p-2.5 bg-[#18E6A8]/10 border border-[#18E6A8]/20 rounded-xl text-[#18E6A8]">
                 <Github className="h-5 w-5" />
               </div>
               <div>
@@ -180,20 +180,20 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
 
             <button
               onClick={onClose}
-              className="text-[#94A3B8] hover:text-[#F8FAFC] p-1.5 rounded-lg hover:bg-[#1E293B] transition-colors"
+              className="text-[#94A3B8] hover:text-[#F8FAFC] p-1.5 rounded-lg hover:bg-[#151E2D] transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-white/[0.06] bg-[#0F172A]/30 px-6 pt-3 gap-2">
+          <div className="flex border-b border-white/[0.08] bg-[#151E2D]/30 px-6 pt-3 gap-2">
             <button
               onClick={() => setActiveTab('url')}
-              className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold border-b-2 transition-all ${
+              className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold border-b-2 transition-all font-mono ${
                 activeTab === 'url'
-                  ? 'border-[#10B981] text-[#10B981]'
-                  : 'border-transparent text-[#94A3B8] hover:text-white'
+                  ? 'border-[#18E6A8] text-[#18E6A8]'
+                  : 'border-transparent text-[#94A3B8] hover:text-[#F8FAFC]'
               }`}
             >
               <Link2 className="w-4 h-4" />
@@ -202,10 +202,10 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
 
             <button
               onClick={() => setActiveTab('github')}
-              className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold border-b-2 transition-all ${
+              className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold border-b-2 transition-all font-mono ${
                 activeTab === 'github'
-                  ? 'border-[#10B981] text-[#10B981]'
-                  : 'border-transparent text-[#94A3B8] hover:text-white'
+                  ? 'border-[#18E6A8] text-[#18E6A8]'
+                  : 'border-transparent text-[#94A3B8] hover:text-[#F8FAFC]'
               }`}
             >
               <Github className="w-4 h-4" />
@@ -216,7 +216,7 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
           {/* Content Body */}
           <div className="p-6 overflow-y-auto flex-1 space-y-4">
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3.5 rounded-xl text-xs font-mono">
+              <div className="bg-[#F05B68]/10 border border-[#F05B68]/20 text-[#F05B68] p-3.5 rounded-xl text-xs font-mono">
                 {error}
               </div>
             )}
@@ -229,7 +229,7 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
                     GitHub Repository URL
                   </label>
                   <div className="relative">
-                    <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
                     <input
                       type="url"
                       required
@@ -244,11 +244,11 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
                           }
                         } catch {}
                       }}
-                      className="w-full bg-[#0F172A] border border-[#243244] rounded-xl pl-10 pr-4 py-2.5 text-[#F8FAFC] text-xs focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/30 transition-all font-mono"
+                      className="w-full bg-[#151E2D] border border-white/[0.08] rounded-xl pl-10 pr-4 py-2.5 text-[#F8FAFC] text-xs focus:outline-none focus:border-[#18E6A8]/50 focus:ring-1 focus:ring-[#18E6A8]/30 transition-all font-mono placeholder-[#64748B]"
                       placeholder="https://github.com/user/project"
                     />
                   </div>
-                  <p className="text-[11px] text-[#94A3B8] mt-1.5 font-mono">
+                  <p className="text-[11px] text-[#64748B] mt-1.5 font-mono">
                     Example: https://github.com/ClimateSync/climate-sync
                   </p>
                 </div>
@@ -262,32 +262,32 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
                     required
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
-                    className="w-full bg-[#0F172A] border border-[#243244] rounded-xl px-3.5 py-2.5 text-[#F8FAFC] text-xs focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/30 transition-all font-mono"
+                    className="w-full bg-[#151E2D] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-[#F8FAFC] text-xs focus:outline-none focus:border-[#18E6A8]/50 focus:ring-1 focus:ring-[#18E6A8]/30 transition-all font-mono placeholder-[#64748B]"
                     placeholder="project-name"
                   />
                 </div>
 
-                <div className="pt-4 border-t border-white/[0.06] flex justify-end gap-3">
+                <div className="pt-4 border-t border-white/[0.08] flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2.5 text-xs font-semibold text-[#94A3B8] hover:text-white transition-colors"
+                    className="px-4 py-2.5 text-xs font-semibold text-[#94A3B8] hover:text-[#F8FAFC] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex items-center gap-2 bg-[#10B981] hover:bg-[#34D399] text-slate-950 px-5 py-2.5 rounded-xl text-xs font-semibold shadow-lg shadow-[#10B981]/20 transition-all disabled:opacity-50 font-mono"
+                    className="flex items-center gap-2 bg-[#18E6A8] hover:bg-[#34D399] text-[#070B16] px-5 py-2.5 rounded-xl text-xs font-semibold shadow-lg shadow-[#18E6A8]/20 transition-all disabled:opacity-50 font-mono"
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
+                        <Loader2 className="h-4 w-4 animate-spin text-[#070B16]" />
                         <span>Connecting...</span>
                       </>
                     ) : (
                       <>
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-4 w-4 stroke-[2.5]" />
                         <span>Add Repository</span>
                       </>
                     )}
@@ -300,13 +300,13 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
                 {/* Search & Filter Bar */}
                 <div className="flex flex-col sm:flex-row items-center gap-3">
                   <div className="relative flex-1 w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search by repo name or owner..."
-                      className="w-full bg-[#0F172A] border border-[#243244] rounded-xl pl-9 pr-4 py-2 text-xs text-[#F8FAFC] placeholder-slate-500 focus:outline-none focus:border-[#10B981]/50 transition-all font-mono"
+                      className="w-full bg-[#151E2D] border border-white/[0.08] rounded-xl pl-9 pr-4 py-2 text-xs text-[#F8FAFC] placeholder-[#64748B] focus:outline-none focus:border-[#18E6A8]/50 transition-all font-mono"
                     />
                   </div>
 
@@ -314,7 +314,7 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
                     <select
                       value={selectedLanguage}
                       onChange={(e) => setSelectedLanguage(e.target.value)}
-                      className="bg-[#0F172A] border border-[#243244] rounded-xl px-3 py-2 text-xs text-[#F8FAFC] font-mono focus:outline-none"
+                      className="bg-[#151E2D] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-[#F8FAFC] font-mono focus:outline-none"
                     >
                       <option value="ALL">All Languages</option>
                       {availableLanguages.map((lang) => (
@@ -328,12 +328,12 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
 
                 {/* List of GitHub repos */}
                 {loadingRepos ? (
-                  <div className="py-12 text-center text-xs text-[#94A3B8] space-y-2">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#10B981] mx-auto" />
-                    <p className="font-mono">Loading repositories from GitHub...</p>
+                  <div className="py-12 text-center text-xs text-[#94A3B8] space-y-2 font-mono">
+                    <Loader2 className="w-6 h-6 animate-spin text-[#18E6A8] mx-auto" />
+                    <p>Loading repositories from GitHub...</p>
                   </div>
                 ) : filteredGitHubRepos.length === 0 ? (
-                  <div className="py-12 text-center text-xs text-[#94A3B8] bg-[#0F172A]/50 rounded-2xl border border-dashed border-[#243244]">
+                  <div className="py-12 text-center text-xs text-[#94A3B8] bg-[#151E2D]/50 rounded-2xl border border-dashed border-white/[0.08]">
                     <p className="font-mono">No matching repositories found.</p>
                   </div>
                 ) : (
@@ -345,20 +345,20 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
                       return (
                         <div
                           key={repo.id}
-                          className="flex items-center justify-between p-3.5 bg-[#0F172A] border border-[#243244] hover:border-white/10 rounded-xl transition-all gap-4"
+                          className="flex items-center justify-between p-3.5 bg-[#151E2D] border border-white/[0.06] hover:border-[#18E6A8]/30 rounded-xl transition-all gap-4"
                         >
                           <div className="space-y-1 min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <h4 className="text-xs font-bold text-white font-mono truncate">
+                              <h4 className="text-xs font-bold text-[#F8FAFC] font-mono truncate">
                                 {repo.name}
                               </h4>
                               {repo.is_private ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#FBBF24]/10 border border-[#FBBF24]/20 text-[#FBBF24]">
                                   <Lock className="w-2.5 h-2.5" />
                                   Private
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#18E6A8]/10 border border-[#18E6A8]/20 text-[#18E6A8]">
                                   <Globe className="w-2.5 h-2.5" />
                                   Public
                                 </span>
@@ -367,12 +367,12 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
 
                             <div className="flex items-center gap-3 text-[11px] text-[#94A3B8] font-mono">
                               <span className="flex items-center gap-1">
-                                <User className="w-3 h-3 text-slate-500" />
+                                <User className="w-3 h-3 text-[#64748B]" />
                                 {repo.owner}
                               </span>
                               {repo.language && (
                                 <span className="flex items-center gap-1">
-                                  <Code2 className="w-3 h-3 text-slate-500" />
+                                  <Code2 className="w-3 h-3 text-[#64748B]" />
                                   {repo.language}
                                 </span>
                               )}
@@ -381,7 +381,7 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
 
                           <div>
                             {isAdded ? (
-                              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-mono font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-mono font-medium bg-[#18E6A8]/10 border border-[#18E6A8]/20 text-[#18E6A8]">
                                 <Check className="w-3.5 h-3.5" />
                                 Already Added
                               </span>
@@ -389,7 +389,7 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
                               <button
                                 onClick={() => handleAddGitHubRepo(repo)}
                                 disabled={isAdding}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#10B981] hover:bg-[#34D399] text-slate-950 rounded-xl text-xs font-semibold shadow-sm shadow-[#10B981]/20 transition-all disabled:opacity-50 font-mono"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#18E6A8] hover:bg-[#34D399] text-[#070B16] rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-50 font-mono"
                               >
                                 {isAdding ? (
                                   <>
@@ -398,7 +398,7 @@ export const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
                                   </>
                                 ) : (
                                   <>
-                                    <Plus className="w-3.5 h-3.5" />
+                                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                                     <span>Add</span>
                                   </>
                                 )}

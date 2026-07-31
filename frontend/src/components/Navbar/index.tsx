@@ -15,14 +15,14 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="bg-[#0F172A] border-b border-[#243244]">
+    <nav className="bg-[#070B16] border-b border-white/[0.08]">
       <div className="max-w-[1600px] mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left: Brand Logo */}
           <Link to="/" className="flex items-center gap-2.5">
-            <Shield className="h-7 w-7 text-[#10B981]" />
-            <span className="text-xl font-medium text-[#F8FAFC] tracking-tight">
-              SecureCode <span className="font-serif italic text-[#10B981]">AI</span>
+            <Shield className="h-7 w-7 text-[#18E6A8]" />
+            <span className="text-xl font-mono font-bold text-[#F8FAFC] tracking-tight">
+              SecureCode <span className="font-mono text-[#18E6A8]">AI</span>
             </span>
           </Link>
 

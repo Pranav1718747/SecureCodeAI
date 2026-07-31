@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Plus, AlertCircle, CheckCircle2, Settings } from 'lucide-react';
+import { Plus, AlertCircle, CheckCircle2, Settings, ShieldCheck } from 'lucide-react';
 import { AppDispatch, RootState } from '../store';
 import {
   fetchRepositories,
   removeRepository,
   refreshRepository,
 } from '../store/repositorySlice';
-import { Button } from '../components/Common';
 import { Repository } from '../types/repository';
 
 // SOC Subcomponents
@@ -75,122 +74,134 @@ export const DashboardPage = () => {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto px-8 pt-8 pb-12 space-y-12 animate-in fade-in duration-500 relative">
-      {/* Toast Notification Banner */}
-      {toastMessage && (
-        <div className="fixed top-5 right-5 z-50 bg-[#10B981] text-slate-950 px-4 py-3 rounded-2xl shadow-xl font-mono text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-3 duration-200">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* 1. Page Header (Enterprise SOC Style) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-              Enterprise SOC Platform
-            </span>
-            <span className="text-xs font-mono text-[#94A3B8]">v2.4.0 Active</span>
+    <div className="min-h-screen bg-[#070B16] text-[#F8FAFC] font-sans antialiased selection:bg-[#18E6A8]/20 selection:text-[#18E6A8]">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 py-8 space-y-8 animate-in fade-in duration-500">
+        
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div className="fixed top-6 right-6 z-50 bg-[#18E6A8] text-[#070B16] px-4 py-3 rounded-xl shadow-2xl shadow-[#18E6A8]/20 font-mono text-xs font-semibold flex items-center gap-2.5 animate-in fade-in slide-in-from-top-3 duration-200">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            <span>{toastMessage}</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#F8FAFC] flex items-center gap-3">
-            Security Operations Center
-            <span className="text-[#10B981] text-xs font-mono font-normal bg-[#111827] border border-[#243244] px-3 py-1 rounded-lg">
-              AI Guard Engine
-            </span>
-          </h1>
-          <p className="text-xs text-[#94A3B8] mt-1">
-            Autonomous multi-agent threat analysis, vulnerability detection, and automated patch validation across repositories.
-          </p>
+        )}
+
+        {/* Hero Section */}
+        <div className="bg-[#111827] border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.36)] relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#18E6A8]/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="space-y-2 z-10 max-w-3xl">
+            <div className="flex flex-wrap items-center gap-2.5 mb-2">
+              <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-[#18E6A8]/10 border border-[#18E6A8]/20 text-[#18E6A8] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#18E6A8] animate-pulse" />
+                Enterprise SOC Platform
+              </span>
+              <span className="text-xs font-mono text-[#64748B] border border-white/[0.06] bg-[#070B16]/50 px-2.5 py-0.5 rounded-full">
+                v2.4.0 Active
+              </span>
+              <span className="text-xs font-mono text-[#18E6A8] border border-[#18E6A8]/20 bg-[#18E6A8]/5 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                AI Guard Active
+              </span>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F8FAFC] flex items-center gap-3">
+              Security Operations Center
+            </h1>
+
+            <p className="text-xs sm:text-sm text-[#94A3B8] leading-relaxed max-w-2xl">
+              Autonomous multi-agent threat analysis, vulnerability detection, and automated patch validation across connected repositories.
+            </p>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="flex items-center gap-3 z-10 w-full sm:w-auto">
+            <button
+              onClick={() => setIsManageModalOpen(true)}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#151E2D] hover:bg-[#1E293B] text-[#F8FAFC] border border-white/[0.08] hover:border-[#18E6A8]/30 rounded-xl text-xs font-semibold font-mono transition-all duration-200"
+            >
+              <Settings className="w-4 h-4 text-[#94A3B8]" />
+              <span>Manage</span>
+            </button>
+
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#18E6A8] hover:bg-[#34D399] text-[#070B16] font-semibold font-mono text-xs rounded-xl shadow-lg shadow-[#18E6A8]/20 transition-all duration-200"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Connect Repository</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={() => setIsManageModalOpen(true)}
-            icon={Settings}
-            className="bg-[#111827] hover:bg-[#1E293B] text-slate-200 border border-[#243244] font-semibold rounded-xl font-mono"
-          >
-            Manage
-          </Button>
+        {/* Global Error Banner */}
+        {error && (
+          <div className="bg-[#F05B68]/10 border border-[#F05B68]/20 text-[#F05B68] p-4 rounded-xl flex items-center gap-3 font-mono text-xs">
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
+            <p>{error}</p>
+          </div>
+        )}
 
-          <Button
-            onClick={() => setIsAddModalOpen(true)}
-            icon={Plus}
-            className="bg-[#10B981] hover:bg-[#34D399] text-slate-950 font-semibold shadow-sm shadow-[#10B981]/20 rounded-xl font-mono"
-          >
-            Connect Repository
-          </Button>
+        {/* 1. ROW 1: CHARTS & TELEMETRY (12-COL GRID) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <SecurityScoreGauge />
+            <AIPerformancePanel />
+          </div>
+          <div className="lg:col-span-4 h-full">
+            <AttackHeatmap />
+          </div>
         </div>
+
+        {/* 2. ROW 2: AI PR TABLE & RISK REDUCTION (12-COL GRID) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div className="lg:col-span-8 h-full">
+            <RecentPRsTable />
+          </div>
+          <div className="lg:col-span-4 h-full">
+            <RiskReductionCard />
+          </div>
+        </div>
+
+        {/* 3. ROW 3: REPOSITORIES & LIVE ACTIVITY FEED (12-COL GRID) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="lg:col-span-8">
+            <ConnectedRepositories
+              repositories={repositories}
+              loading={loading}
+              onAddRepo={() => setIsAddModalOpen(true)}
+              onManageRepos={() => setIsManageModalOpen(true)}
+            />
+          </div>
+          <div className="lg:col-span-4">
+            <ActivityFeed />
+          </div>
+        </div>
+
+        {/* Repository Management Modals */}
+        <AddRepositoryModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={handleAddSuccess}
+          connectedRepositories={repositories}
+        />
+
+        <ManageRepositoriesModal
+          isOpen={isManageModalOpen}
+          onClose={() => setIsManageModalOpen(false)}
+          repositories={repositories}
+          onRefreshRepo={handleRefreshRepo}
+          onRemoveRepo={(repo) => setRepoToRemove(repo)}
+        />
+
+        <RemoveRepositoryModal
+          isOpen={!!repoToRemove}
+          repoName={repoToRemove?.name || null}
+          onClose={() => setRepoToRemove(null)}
+          onConfirm={handleConfirmRemove}
+          isDeleting={isDeleting}
+        />
+
       </div>
-
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 flex-shrink-0" />
-          <p className="text-xs font-mono">{error}</p>
-        </div>
-      )}
-
-      {/* 2. ROW 1: CHARTS & ANALYTICS (12-COL GRID) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-          <SecurityScoreGauge />
-          <AIPerformancePanel />
-        </div>
-        <div className="lg:col-span-4 h-full">
-          <AttackHeatmap />
-        </div>
-      </div>
-
-      {/* 3. ROW 2: AI PR TABLE & RISK REDUCTION (12-COL GRID) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-8 h-full">
-          <RecentPRsTable />
-        </div>
-        <div className="lg:col-span-4 h-full">
-          <RiskReductionCard />
-        </div>
-      </div>
-
-      {/* 4. ROW 3: CONNECTED REPOSITORIES & LIVE SOC ACTIVITY FEED (12-COL GRID) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-8">
-          <ConnectedRepositories
-            repositories={repositories}
-            loading={loading}
-            onAddRepo={() => setIsAddModalOpen(true)}
-            onManageRepos={() => setIsManageModalOpen(true)}
-          />
-        </div>
-        <div className="lg:col-span-4">
-          <ActivityFeed />
-        </div>
-      </div>
-
-      {/* Add Repository Modal */}
-      <AddRepositoryModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={handleAddSuccess}
-        connectedRepositories={repositories}
-      />
-
-      {/* Manage Repositories Modal */}
-      <ManageRepositoriesModal
-        isOpen={isManageModalOpen}
-        onClose={() => setIsManageModalOpen(false)}
-        repositories={repositories}
-        onRefreshRepo={handleRefreshRepo}
-        onRemoveRepo={(repo) => setRepoToRemove(repo)}
-      />
-
-      {/* Remove Repository Confirmation Modal */}
-      <RemoveRepositoryModal
-        isOpen={!!repoToRemove}
-        repoName={repoToRemove?.name || null}
-        onClose={() => setRepoToRemove(null)}
-        onConfirm={handleConfirmRemove}
-        isDeleting={isDeleting}
-      />
     </div>
   );
 };

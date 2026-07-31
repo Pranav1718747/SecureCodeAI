@@ -3,13 +3,16 @@ export interface Scan {
   repository: string; // ID
   branch_name: string;
   commit_hash: string | null;
-  status: 'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+  status: 'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'ARCHIVED';
   total_vulnerabilities: number;
   trigger_source: string;
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
   error_message?: string;
+  custom_name?: string;
+  is_pinned?: boolean;
+  is_archived?: boolean;
 }
 
 export interface Vulnerability {
