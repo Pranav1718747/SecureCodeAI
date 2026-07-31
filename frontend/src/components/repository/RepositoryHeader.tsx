@@ -19,8 +19,8 @@ export const RepositoryHeader = ({ repo }: RepositoryHeaderProps) => {
           
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl font-bold text-white tracking-tight">{repo.name}</h1>
-              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800/80 border border-slate-700 text-slate-300 text-xs font-medium rounded-full">
+              <h1 className="text-3xl font-serif italic text-white tracking-tight">{repo.name}</h1>
+              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800/80 border border-slate-700 text-slate-300 text-xs font-medium rounded-full mt-1">
                 {repo.is_private ? <Lock className="h-3 w-3" /> : <Globe className="h-3 w-3" />}
                 {repo.is_private ? 'Private' : 'Public'}
               </span>
@@ -30,7 +30,7 @@ export const RepositoryHeader = ({ repo }: RepositoryHeaderProps) => {
               href={repo.clone_url.replace('.git', '')} 
               target="_blank" 
               rel="noreferrer"
-              className="text-sm text-slate-400 hover:text-blue-400 flex items-center gap-1.5 transition-colors group"
+              className="font-mono text-sm text-slate-400 hover:text-brand-400 flex items-center gap-1.5 transition-colors group"
             >
               {repo.full_name}
               <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 -translate-y-1 group-hover:translate-y-0 transition-all" />

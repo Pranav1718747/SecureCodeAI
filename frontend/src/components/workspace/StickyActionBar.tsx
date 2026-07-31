@@ -22,7 +22,7 @@ export const StickyActionBar = ({ scanId, repoId, hasPatch, isGeneratingPatch, o
         </Link>
         <div className="h-6 w-px bg-slate-800" />
         <div>
-          <h1 className="text-sm font-semibold text-slate-200">Investigation Workspace</h1>
+          <h1 className="text-sm font-normal tracking-tight text-slate-200">Investigation <span className="font-serif italic text-brand-400">Workspace</span></h1>
           <p className="text-xs text-slate-500 font-mono">Scan #{scanId.split('-')[0]}</p>
         </div>
       </div>

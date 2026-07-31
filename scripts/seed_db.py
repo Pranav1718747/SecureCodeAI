@@ -4,7 +4,7 @@ import sys
 
 # Setup Django environment
 sys.path.append(os.path.join(os.path.dirname(__file__), '../backend'))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from accounts.models import Organization, User

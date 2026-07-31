@@ -6,6 +6,11 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Manrope', 'sans-serif'],
+        serif: ['Instrument Serif', 'serif'],
+        mono: ['DM Mono', 'monospace'],
+      },
       colors: {
         brand: {
           50: '#f0fdf4',
