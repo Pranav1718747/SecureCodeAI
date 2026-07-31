@@ -17,6 +17,7 @@ import { WorkspaceTabs, TabType } from '../components/workspace/tabs/WorkspaceTa
 import { VulnerableCodeTab } from '../components/workspace/tabs/VulnerableCodeTab';
 import { AIPatchTab } from '../components/workspace/tabs/AIPatchTab';
 import { ValidationTab } from '../components/workspace/tabs/ValidationTab';
+import { AttackSimulationTab } from '../components/workspace/tabs/AttackSimulationTab';
 import { PullRequestTab } from '../components/workspace/tabs/PullRequestTab';
 
 export const ReviewPage = () => {
@@ -205,6 +206,7 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
                   />
                 )}
                 {activeTab === 'validation' && patch && <ValidationTab vuln={selectedVuln} patch={patch} />}
+                {activeTab === 'simulation' && <AttackSimulationTab vuln={selectedVuln} patch={patch} />}
                 {activeTab === 'pr' && prData && <PullRequestTab prData={prData} />}
               </div>
             </>
