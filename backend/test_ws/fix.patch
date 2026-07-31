@@ -1,0 +1,6 @@
+--- a/file
++++ b/file
+@@ -1,2 +1,2 @@
+ def foo():
+-    print('vuln')
++    print('fixed')

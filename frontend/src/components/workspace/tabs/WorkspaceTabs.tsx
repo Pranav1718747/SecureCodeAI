@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
-import { FileText, Code2, GitMerge, ShieldCheck } from 'lucide-react';
+import { Code2, GitMerge, ShieldCheck } from 'lucide-react';
 
 import { GitPullRequest } from 'lucide-react';
 
-export type TabType = 'analysis' | 'code' | 'patch' | 'validation' | 'pr';
+export type TabType = 'code' | 'patch' | 'validation' | 'pr';
 
 interface WorkspaceTabsProps {
   activeTab: TabType;
@@ -14,7 +14,6 @@ interface WorkspaceTabsProps {
 
 export const WorkspaceTabs = ({ activeTab, onTabChange, hasPatch, hasPR }: WorkspaceTabsProps) => {
   const tabs = [
-    { id: 'analysis' as TabType, label: 'AI Analysis', icon: FileText },
     { id: 'code' as TabType, label: 'Vulnerable Code', icon: Code2 },
     { id: 'patch' as TabType, label: 'AI Patch', icon: GitMerge, disabled: !hasPatch },
     { id: 'validation' as TabType, label: 'Validation', icon: ShieldCheck, disabled: !hasPatch },

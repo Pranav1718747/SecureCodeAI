@@ -188,7 +188,7 @@ class GitService:
             raise analyze_git_error(stage, failed_result)
 
     @classmethod
-    def push_branch(cls, workspace_path: str, branch_name: str, logger: logging.Logger):
+    def push_branch(cls, workspace_path: str, branch_name: str, default_branch: str, logger: logging.Logger) -> str:
         stage = "git_push"
         from config.env import settings
         token = settings.github_token
@@ -210,7 +210,79 @@ class GitService:
             remote_url = remote_url.replace("https://", f"https://oauth2:{token}@")
             cls._run_git_cmd(workspace_path, ['remote', 'set-url', 'origin', remote_url], stage, logger)
             
-        cls._run_git_cmd(workspace_path, ['push', '-u', 'origin', branch_name], stage, logger)
+        # 1. Merge-Base Verification
+        if default_branch:
+            logger.info(f"[{stage}] Verifying merge-base between HEAD and origin/{default_branch}")
+            try:
+                graph_res = cls._run_git_cmd(workspace_path, ['log', '--graph', '--oneline', '--decorate', '-n', '10'], stage, logger)
+                logger.info(f"[{stage}] Git History:\n{graph_res.stdout}")
+                
+                head_sha_res = cls._run_git_cmd(workspace_path, ['rev-parse', 'HEAD'], stage, logger)
+                target_sha_res = cls._run_git_cmd(workspace_path, ['rev-parse', f'origin/{default_branch}'], stage, logger)
+                logger.info(f"[{stage}] HEAD is at {head_sha_res.stdout.strip()}")
+                logger.info(f"[{stage}] origin/{default_branch} is at {target_sha_res.stdout.strip()}")
+                
+                merge_base_res = cls._run_git_cmd(workspace_path, ['merge-base', 'HEAD', f'origin/{default_branch}'], stage, logger)
+                if not merge_base_res.stdout.strip():
+                    raise ValueError("Empty merge-base result")
+                logger.info(f"[{stage}] Valid merge base found: {merge_base_res.stdout.strip()}")
+            except (GitCommandError, ValueError) as e:
+                failed_result = GitCommandResult("git merge-base", "", "Branch has no history in common with main", 1, 0)
+                raise GitCommandError(stage, failed_result, "Repository Errors", "Unrelated Git History", "The feature branch does not share commits with the default branch.", ["Ensure repository was cloned correctly.", "Do not use 'git init' manually."])
+            
+        # 2. Push Branch with Auto-Recovery
+        import uuid
+        retry_count = 0
+        max_retries = 3
+        
+        while retry_count < max_retries:
+            try:
+                # Pre-push remote branch check
+                ls_remote_res = cls._run_git_cmd(workspace_path, ['ls-remote', '--heads', 'origin', branch_name], stage, logger)
+                if branch_name in ls_remote_res.stdout:
+                    logger.warning(f"[{stage}] Remote branch {branch_name} already exists. Forcing recovery.")
+                    raise GitCommandError(stage, GitCommandResult("git push", "", "rejected: branch exists", 1, 0), "Repository Errors", "Push rejected", "Branch already exists", [])
+                
+                # Push Branch
+                logger.info(f"[{stage}] Push command: git push -u origin {branch_name}")
+                push_res = cls._run_git_cmd(workspace_path, ['push', '-u', 'origin', branch_name], stage, logger)
+                logger.info(f"[{stage}] Push output:\n{push_res.stdout}\n{push_res.stderr}")
+                
+                # Verify it actually reached the remote
+                ls_remote_res = cls._run_git_cmd(workspace_path, ['ls-remote', '--heads', 'origin', branch_name], stage, logger)
+                if branch_name not in ls_remote_res.stdout:
+                    failed_result = GitCommandResult("git ls-remote", ls_remote_res.stdout, "Branch was never pushed.", 1, 0)
+                    raise analyze_git_error(stage, failed_result)
+                
+                logger.info(f"[{stage}] Final pushed branch: {branch_name}")
+                return branch_name
+                
+            except GitCommandError as e:
+                err_msg = e.result.stderr.lower() if e.result else ""
+                
+                if "rejected" in err_msg or "non-fast-forward" in err_msg or "behind its remote" in err_msg or "failed to push some refs" in err_msg or "exists" in err_msg:
+                    logger.warning(f"[{stage}] Push rejected. Recovery attempt {retry_count + 1}/{max_retries}")
+                    
+                    new_branch_name = f"securecode/fix-{branch_name.split('-')[1]}-{uuid.uuid4().hex[:8]}"
+                    logger.info(f"[{stage}] Generated brand new branch: {new_branch_name}")
+                    
+                    # Checkout new branch from current HEAD
+                    cls._run_git_cmd(workspace_path, ['checkout', '-b', new_branch_name], stage, logger)
+                    
+                    try:
+                        cls._run_git_cmd(workspace_path, ['branch', '-d', branch_name], stage, logger)
+                    except Exception:
+                        pass
+                        
+                    branch_name = new_branch_name
+                    retry_count += 1
+                else:
+                    e.dev_message = e.result.stderr if e.result else str(e)
+                    raise e
+                    
+        # If all retries fail
+        failed_result = GitCommandResult("git push", "", f"Failed to push after {max_retries} retries", 1, 0)
+        raise analyze_git_error(stage, failed_result)
 
 
 # ---------------------------------------------------------
@@ -271,7 +343,8 @@ class BranchService:
     @staticmethod
     def create_branch(workspace_path: str, scan_id: str, logger: logging.Logger) -> str:
         stage = "create_branch"
-        branch_name = f"securecode/fix-{str(scan_id)[:8]}"
+        import uuid
+        branch_name = f"securecode/fix-{str(scan_id)[:8]}-{uuid.uuid4().hex[:8]}"
         GitService._run_git_cmd(workspace_path, ['checkout', '-b', branch_name], stage, logger)
         return branch_name
 
@@ -298,46 +371,53 @@ class PatchApplicationService:
         workspace_base = "/tmp/securecode/workspaces"
         workspace_path = os.path.join(workspace_base, str(patch.id))
         
-        # 1. SETUP WORKSPACE
+        # 1. SETUP WORKSPACE (Git Clone)
+        stage = "git_clone"
         try:
             os.makedirs(workspace_base, exist_ok=True)
-            zip_upload = repo.zip_uploads.filter(status='COMPLETED').order_by('-created_at').first()
-            source_path = zip_upload.extracted_path if zip_upload else None
-            
             if os.path.exists(workspace_path):
+                import shutil
                 shutil.rmtree(workspace_path)
-                
-            if source_path and os.path.exists(source_path):
-                shutil.copytree(source_path, workspace_path)
-            else:
-                os.makedirs(workspace_path)
-                file_abs_path = os.path.join(workspace_path, vuln.file_path.lstrip('/'))
-                os.makedirs(os.path.dirname(file_abs_path), exist_ok=True)
-                with open(file_abs_path, 'w') as f:
-                    if patch.ai_response_json and patch.ai_response_json.get('fallback_fix'):
-                        f.write(patch.ai_response_json.get('fallback_fix').get('before', ''))
-                    else:
-                        f.write("// Original vulnerable code\n")
-        except Exception as e:
-            failed_res = GitCommandResult("workspace_setup", "", str(e), 1, 0)
-            raise GitCommandError("workspace_setup", failed_res, "Repository Errors", "Failed to setup workspace", str(e), [])
-
-        # 2. INIT REPO
-        stage = "git_init"
-        if not os.path.exists(os.path.join(workspace_path, '.git')):
-            GitService._run_git_cmd(workspace_path, ['init'], stage, logger)
-            GitService._run_git_cmd(workspace_path, ['config', 'user.email', 'security@securecode.ai'], stage, logger)
-            GitService._run_git_cmd(workspace_path, ['config', 'user.name', 'SecureCode AI'], stage, logger)
-            if repo and repo.full_name:
-                remote_url = f"https://github.com/{repo.full_name}.git"
-                try:
-                    GitService._run_git_cmd(workspace_path, ['remote', 'add', 'origin', remote_url], stage, logger)
-                except GitCommandError:
-                    pass
-            GitService._run_git_cmd(workspace_path, ['add', '.'], stage, logger)
-            GitService._run_git_cmd(workspace_path, ['commit', '-m', 'Initial commit'], stage, logger)
             
-        # 3. VERIFICATIONS
+            from config.env import settings
+            import requests
+            token = settings.github_token
+            
+            if repo and repo.full_name:
+                # Get default branch dynamically
+                headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"} if token else {}
+                try:
+                    repo_res = requests.get(f"https://api.github.com/repos/{repo.full_name}", headers=headers, timeout=5)
+                    default_branch = repo_res.json().get('default_branch', repo.default_branch) if repo_res.status_code == 200 else repo.default_branch
+                except Exception:
+                    default_branch = repo.default_branch
+                    
+                auth_url = f"https://oauth2:{token}@github.com/{repo.full_name}.git" if token else f"https://github.com/{repo.full_name}.git"
+                
+                logger.info(f"[{stage}] Cloning {repo.full_name} into {workspace_path}")
+                GitService._run_git_cmd(workspace_base, ['clone', auth_url, str(patch.id)], stage, logger)
+                
+                GitService._run_git_cmd(workspace_path, ['config', 'user.email', 'security@securecode.ai'], stage, logger)
+                GitService._run_git_cmd(workspace_path, ['config', 'user.name', 'SecureCode AI'], stage, logger)
+                
+                # Fetch, Checkout and pull
+                GitService._run_git_cmd(workspace_path, ['fetch', 'origin', '--prune'], stage, logger)
+                GitService._run_git_cmd(workspace_path, ['checkout', default_branch], stage, logger)
+                GitService._run_git_cmd(workspace_path, ['pull', 'origin', default_branch], stage, logger)
+                
+                # Store the dynamically detected default branch for later reference (e.g. merge-base check)
+                patch.ai_response_json = patch.ai_response_json or {}
+                patch.ai_response_json["_default_branch"] = default_branch
+            else:
+                raise Exception("Repository full_name is missing")
+                
+        except Exception as e:
+            if isinstance(e, GitCommandError):
+                raise e
+            failed_res = GitCommandResult("workspace_setup", "", str(e), 1, 0)
+            raise GitCommandError("workspace_setup", failed_res, "Repository Errors", "Failed to clone repository", str(e), ["Check network and GITHUB_TOKEN permissions."])
+            
+        # 2. VERIFICATIONS
         GitVerificationService.verify_repository(workspace_path, logger)
         GitVerificationService.verify_authentication(workspace_path, logger)
 
@@ -367,7 +447,9 @@ class PatchApplicationService:
                     diff_path = os.path.join(workspace_path, 'fix.patch')
                     with open(diff_path, 'w') as f:
                         f.write(diff)
-                    subprocess.run(['patch', '-p1', '<', 'fix.patch'], cwd=workspace_path, shell=True, check=True, capture_output=True)
+                    target_file = vuln.file_path.lstrip('/')
+                    with open(diff_path, 'r') as f:
+                        subprocess.run(['patch', '--force', target_file], cwd=workspace_path, stdin=f, check=True, capture_output=True)
         except subprocess.CalledProcessError as e:
             failed_res = GitCommandResult("patch", e.stdout.decode(), e.stderr.decode(), e.returncode, 0)
             raise analyze_git_error(stage, failed_res)
@@ -378,12 +460,16 @@ class PatchApplicationService:
         # 6. VERIFY PATCH
         GitVerificationService.verify_patch(workspace_path, logger)
 
-        # 7. COMMIT & PUSH
         commit_sha = CommitService.create_commit(workspace_path, vuln, logger)
         patch.commit_sha = commit_sha
         patch.save(update_fields=['commit_sha'])
         
-        GitService.push_branch(workspace_path, branch_name, logger)
+        default_branch = patch.ai_response_json.get('_default_branch') if patch.ai_response_json else None
+        final_branch = GitService.push_branch(workspace_path, branch_name, default_branch, logger)
+        
+        if final_branch != branch_name:
+            patch.branch_name = final_branch
+            patch.save(update_fields=['branch_name'])
         
         return workspace_path
 
@@ -404,23 +490,52 @@ class GitHubApiService:
             failed_res = GitCommandResult("github_api", "", "GITHUB_TOKEN is missing", 1, 0)
             raise GitCommandError(stage, failed_res, "Authentication Failed", "GitHub Personal Access Token is missing.", "GitHub API requires authentication.", ["Configure GITHUB_TOKEN environment variable."])
             
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        # 1. Verify User and Base Branch
+        try:
+            user_res = requests.get("https://api.github.com/user", headers=headers, timeout=5)
+            user_login = user_res.json().get('login') if user_res.status_code == 200 else None
+            
+            repo_res = requests.get(f"https://api.github.com/repos/{repo.full_name}", headers=headers, timeout=5)
+            if repo_res.status_code == 200:
+                base_branch = repo_res.json().get('default_branch', repo.default_branch)
+            else:
+                base_branch = repo.default_branch
+        except requests.exceptions.RequestException:
+            user_login = None
+            base_branch = repo.default_branch
+            
+        # Determine head branch format (owner:branch if username is known)
+        head_branch = f"{user_login}:{patch.branch_name}" if user_login else patch.branch_name
+
+        # 2. Check for existing PR
+        try:
+            pulls_url = f"https://api.github.com/repos/{repo.full_name}/pulls?state=open&head={head_branch}"
+            pulls_res = requests.get(pulls_url, headers=headers, timeout=5)
+            if pulls_res.status_code == 200 and pulls_res.json():
+                logger.info(f"[{stage}] PR already exists for {head_branch}")
+                return pulls_res.json()[0]
+        except requests.exceptions.RequestException:
+            pass
+
         ai_meta = patch.ai_response_json or {}
         pr_title = ai_meta.get("pr_title") or f"fix(security): resolve {vuln.title}"
         pr_description = ai_meta.get("pr_description") or patch.explanation
         
         url = f"https://api.github.com/repos/{repo.full_name}/pulls"
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github.v3+json"
-        }
         data = {
             "title": pr_title,
             "body": pr_description,
-            "head": patch.branch_name,
-            "base": repo.default_branch
+            "head": head_branch,
+            "base": base_branch
         }
         
         start_time = time.time()
+        logger.info(f"[{stage}] Request Payload: {data}")
         try:
             response = requests.post(url, headers=headers, json=data, timeout=15)
             duration_ms = int((time.time() - start_time) * 1000)
@@ -432,7 +547,6 @@ class GitHubApiService:
                 logger.error(f"[{stage}] GitHub API returned {response.status_code}: {response.text}")
                 failed_res = GitCommandResult(f"POST {url}", response.text, f"HTTP {response.status_code}", response.status_code, duration_ms)
                 
-                # Check specific GitHub API errors
                 category = "GitHub API Errors"
                 reason = "Failed to create Pull Request."
                 human_message = f"GitHub API rejected the request."
@@ -442,12 +556,27 @@ class GitHubApiService:
                     reason = "Repository not found or access denied."
                     possible_fixes = ["Check GITHUB_TOKEN permissions.", "Verify repository exists."]
                 elif response.status_code == 422:
-                    if "A pull request already exists" in response.text:
-                        reason = "Pull Request already exists."
-                        human_message = "A PR for this branch already exists."
-                    elif "No commits between" in response.text:
-                        reason = "No commits between branches."
-                        human_message = "The branch has no new commits to merge."
+                    try:
+                        error_json = response.json()
+                        reason = "Validation Failed"
+                        errors = error_json.get("errors", [])
+                        if errors:
+                            error_messages = [e.get("message", "") for e in errors]
+                            human_message = " | ".join(error_messages)
+                            if "A pull request already exists" in human_message:
+                                reason = "Pull Request already exists."
+                            elif "No commits between" in human_message:
+                                reason = "No commits between branches."
+                        else:
+                            human_message = error_json.get("message", "Validation Failed")
+                    except ValueError:
+                        pass
+                    
+                    possible_fixes = [
+                        f"Head Branch: {head_branch}",
+                        f"Base Branch: {base_branch}",
+                        "Check if branch exists remotely."
+                    ]
                         
                 raise GitCommandError(stage, failed_res, category, reason, human_message, possible_fixes)
                 

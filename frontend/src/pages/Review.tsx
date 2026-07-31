@@ -14,7 +14,6 @@ import { LiveScanDashboard } from './LiveScanDashboard';
 import { VulnerabilityExplorer } from '../components/workspace/VulnerabilityExplorer';
 import { StickyActionBar } from '../components/workspace/StickyActionBar';
 import { WorkspaceTabs, TabType } from '../components/workspace/tabs/WorkspaceTabs';
-import { AIAnalysisTab } from '../components/workspace/tabs/AIAnalysisTab';
 import { VulnerableCodeTab } from '../components/workspace/tabs/VulnerableCodeTab';
 import { AIPatchTab } from '../components/workspace/tabs/AIPatchTab';
 import { ValidationTab } from '../components/workspace/tabs/ValidationTab';
@@ -83,7 +82,7 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
   
   const [selectedVuln, setSelectedVuln] = useState<Vulnerability | null>(null);
   const [patches, setPatches] = useState<Record<string, Patch>>({});
-  const [activeTab, setActiveTab] = useState<TabType>('analysis');
+  const [activeTab, setActiveTab] = useState<TabType>('code');
 
   const [isGeneratingPatch, setIsGeneratingPatch] = useState(false);
   const [generationError, setGenerationError] = useState<any | null>(null);
@@ -176,7 +175,7 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
             selectedVulnId={selectedVuln?.id || null}
             onSelect={(vuln) => {
               setSelectedVuln(vuln);
-              setActiveTab('analysis');
+              setActiveTab('code');
               setGenerationError(null); // Clear errors when switching
             }}
           />
@@ -194,7 +193,6 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
               />
               
               <div className="flex-1 overflow-y-auto">
-                {activeTab === 'analysis' && <AIAnalysisTab vuln={selectedVuln} />}
                 {activeTab === 'code' && <VulnerableCodeTab vuln={selectedVuln} />}
                 {activeTab === 'patch' && (
                   <AIPatchTab 
