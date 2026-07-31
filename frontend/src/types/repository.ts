@@ -2,6 +2,7 @@ export interface Repository {
   id: string;
   name: string;
   full_name: string;
+  owner?: string;
   clone_url: string;
   default_branch: string;
   is_private: boolean;
@@ -9,6 +10,19 @@ export interface Repository {
   ast_index_status: 'NOT_INDEXED' | 'INDEXING' | 'INDEXED' | 'FAILED';
   created_at: string;
   updated_at: string;
+  security_score?: number;
+  last_scan?: string;
+}
+
+export interface GitHubRepo {
+  id: number | string;
+  name: string;
+  full_name: string;
+  owner: string;
+  clone_url: string;
+  default_branch: string;
+  is_private: boolean;
+  language: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -26,3 +40,4 @@ export interface AddRepositoryPayload {
   is_private?: boolean;
   language?: string;
 }
+

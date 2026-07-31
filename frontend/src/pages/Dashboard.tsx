@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Plus, AlertCircle } from 'lucide-react';
+import { Plus, AlertCircle, CheckCircle2, Settings } from 'lucide-react';
 import { AppDispatch, RootState } from '../store';
-import { fetchRepositories } from '../store/repositorySlice';
-import { RepositoryUploader } from '../components/RepositoryUploader';
+import {
+  fetchRepositories,
+  removeRepository,
+  refreshRepository,
+} from '../store/repositorySlice';
 import { Button } from '../components/Common';
+import { Repository } from '../types/repository';
 
 // SOC Subcomponents
 import { SecurityScoreGauge } from '../components/SOC/SecurityScoreGauge';
@@ -15,17 +19,71 @@ import { RiskReductionCard } from '../components/SOC/RiskReductionCard';
 import { RecentPRsTable } from '../components/SOC/RecentPRsTable';
 import { ConnectedRepositories } from '../components/SOC/ConnectedRepositories';
 
+// Repository Management Modals
+import { AddRepositoryModal } from '../components/repository/AddRepositoryModal';
+import { ManageRepositoriesModal } from '../components/repository/ManageRepositoriesModal';
+import { RemoveRepositoryModal } from '../components/repository/RemoveRepositoryModal';
+
 export const DashboardPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { repositories, loading, error } = useSelector((state: RootState) => state.repositories);
-  const [isUploaderOpen, setIsUploaderOpen] = useState(false);
+
+  // Modal States
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+  const [repoToRemove, setRepoToRemove] = useState<Repository | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Toast Notification State
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchRepositories());
   }, [dispatch]);
 
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  };
+
+  const handleAddSuccess = (repoName: string) => {
+    dispatch(fetchRepositories());
+    showToast(`Repository "${repoName}" successfully connected.`);
+  };
+
+  const handleRefreshRepo = async (repoId: string) => {
+    await dispatch(refreshRepository(repoId)).unwrap();
+    dispatch(fetchRepositories());
+    showToast('Repository data refreshed successfully.');
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!repoToRemove) return;
+    setIsDeleting(true);
+    try {
+      await dispatch(removeRepository(repoToRemove.id)).unwrap();
+      showToast(`Repository "${repoToRemove.name}" removed from SecureCodeAI.`);
+      setRepoToRemove(null);
+      dispatch(fetchRepositories());
+    } catch (err: any) {
+      alert(err || 'Failed to remove repository');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="max-w-[1600px] mx-auto px-8 pt-8 pb-12 space-y-12 animate-in fade-in duration-500">
+    <div className="max-w-[1600px] mx-auto px-8 pt-8 pb-12 space-y-12 animate-in fade-in duration-500 relative">
+      {/* Toast Notification Banner */}
+      {toastMessage && (
+        <div className="fixed top-5 right-5 z-50 bg-[#10B981] text-slate-950 px-4 py-3 rounded-2xl shadow-xl font-mono text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-3 duration-200">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* 1. Page Header (Enterprise SOC Style) */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-6">
         <div>
@@ -48,9 +106,17 @@ export const DashboardPage = () => {
 
         <div className="flex items-center gap-3">
           <Button
-            onClick={() => setIsUploaderOpen(true)}
+            onClick={() => setIsManageModalOpen(true)}
+            icon={Settings}
+            className="bg-[#111827] hover:bg-[#1E293B] text-slate-200 border border-[#243244] font-semibold rounded-xl font-mono"
+          >
+            Manage
+          </Button>
+
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
             icon={Plus}
-            className="bg-[#10B981] hover:bg-[#34D399] text-slate-950 font-semibold shadow-sm shadow-[#10B981]/20 rounded-xl"
+            className="bg-[#10B981] hover:bg-[#34D399] text-slate-950 font-semibold shadow-sm shadow-[#10B981]/20 rounded-xl font-mono"
           >
             Connect Repository
           </Button>
@@ -91,7 +157,8 @@ export const DashboardPage = () => {
           <ConnectedRepositories
             repositories={repositories}
             loading={loading}
-            onAddRepo={() => setIsUploaderOpen(true)}
+            onAddRepo={() => setIsAddModalOpen(true)}
+            onManageRepos={() => setIsManageModalOpen(true)}
           />
         </div>
         <div className="lg:col-span-4">
@@ -99,11 +166,30 @@ export const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Repository Uploader Modal */}
-      <RepositoryUploader
-        isOpen={isUploaderOpen}
-        onClose={() => setIsUploaderOpen(false)}
-        onSuccess={() => dispatch(fetchRepositories())}
+      {/* Add Repository Modal */}
+      <AddRepositoryModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={handleAddSuccess}
+        connectedRepositories={repositories}
+      />
+
+      {/* Manage Repositories Modal */}
+      <ManageRepositoriesModal
+        isOpen={isManageModalOpen}
+        onClose={() => setIsManageModalOpen(false)}
+        repositories={repositories}
+        onRefreshRepo={handleRefreshRepo}
+        onRemoveRepo={(repo) => setRepoToRemove(repo)}
+      />
+
+      {/* Remove Repository Confirmation Modal */}
+      <RemoveRepositoryModal
+        isOpen={!!repoToRemove}
+        repoName={repoToRemove?.name || null}
+        onClose={() => setRepoToRemove(null)}
+        onConfirm={handleConfirmRemove}
+        isDeleting={isDeleting}
       />
     </div>
   );

@@ -55,6 +55,31 @@ export const addRepository = createAsyncThunk(
   }
 );
 
+export const removeRepository = createAsyncThunk(
+  'repositories/remove',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await repositoryService.deleteRepository(id);
+      return id;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
+      return rejectWithValue(error.response?.data?.detail || 'Failed to remove repository');
+    }
+  }
+);
+
+export const refreshRepository = createAsyncThunk(
+  'repositories/refresh',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      return await repositoryService.refreshRepository(id);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
+      return rejectWithValue(error.response?.data?.detail || 'Failed to refresh repository');
+    }
+  }
+);
+
 const repositorySlice = createSlice({
   name: 'repositories',
   initialState,
@@ -85,10 +110,29 @@ const repositorySlice = createSlice({
         state.activeRepository = action.payload;
       })
       .addCase(addRepository.fulfilled, (state, action) => {
-        state.repositories.unshift(action.payload);
+        const exists = state.repositories.some((r) => r.id === action.payload.id);
+        if (!exists) {
+          state.repositories.unshift(action.payload);
+        }
+      })
+      .addCase(removeRepository.fulfilled, (state, action) => {
+        state.repositories = state.repositories.filter((r) => r.id !== action.payload);
+        if (state.activeRepository?.id === action.payload) {
+          state.activeRepository = null;
+        }
+      })
+      .addCase(refreshRepository.fulfilled, (state, action) => {
+        const index = state.repositories.findIndex((r) => r.id === action.payload.id);
+        if (index !== -1) {
+          state.repositories[index] = action.payload;
+        }
+        if (state.activeRepository?.id === action.payload.id) {
+          state.activeRepository = action.payload;
+        }
       });
   },
 });
 
 export const { setActiveRepository, clearRepositories, clearError } = repositorySlice.actions;
 export default repositorySlice.reducer;
+

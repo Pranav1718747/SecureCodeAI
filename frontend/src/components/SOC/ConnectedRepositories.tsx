@@ -11,6 +11,8 @@ import {
   ExternalLink,
   ShieldCheck,
   Code2,
+  Plus,
+  Settings,
 } from 'lucide-react';
 import { Repository } from '../../types/repository';
 import { scanService } from '../../services/scanService';
@@ -19,21 +21,28 @@ interface ConnectedRepositoriesProps {
   repositories: Repository[];
   loading: boolean;
   onAddRepo: () => void;
+  onManageRepos: () => void;
 }
 
 export const ConnectedRepositories: React.FC<ConnectedRepositoriesProps> = ({
   repositories,
   loading,
+  onAddRepo,
+  onManageRepos,
 }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [scanningRepoId, setScanningRepoId] = useState<string | null>(null);
 
-  const filteredRepos = repositories.filter(
-    (repo) =>
+  const filteredRepos = repositories.filter((repo) => {
+    const owner = repo.owner || (repo.full_name ? repo.full_name.split('/')[0] : '');
+    return (
       repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      repo.full_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      repo.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (repo.language && repo.language.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  });
 
   const handleScanAgain = async (repo: Repository, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -58,7 +67,10 @@ export const ConnectedRepositories: React.FC<ConnectedRepositoriesProps> = ({
         <div className="h-10 w-72 bg-[#111827] rounded-xl animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-72 bg-[#111827] rounded-[20px] border border-white/[0.06] animate-pulse" />
+            <div
+              key={i}
+              className="h-72 bg-[#111827] rounded-[20px] border border-white/[0.06] animate-pulse"
+            />
           ))}
         </div>
       </div>
@@ -67,8 +79,8 @@ export const ConnectedRepositories: React.FC<ConnectedRepositoriesProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header & Search */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+      {/* Header & Section Actions */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-[#F8FAFC] flex items-center gap-2">
             <Github className="w-5 h-5 text-[#10B981]" />
@@ -79,16 +91,37 @@ export const ConnectedRepositories: React.FC<ConnectedRepositoriesProps> = ({
           </p>
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search Repository..."
-            className="w-full bg-[#111827] border border-[#243244] rounded-xl pl-9 pr-4 py-2 text-xs text-[#F8FAFC] placeholder-slate-500 focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/30 transition-all font-mono"
-          />
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+          {/* Search Input */}
+          <div className="relative flex-1 md:w-64 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search Repository..."
+              className="w-full bg-[#111827] border border-[#243244] rounded-xl pl-9 pr-4 py-2 text-xs text-[#F8FAFC] placeholder-slate-500 focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/30 transition-all font-mono"
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onAddRepo}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#10B981] hover:bg-[#34D399] text-slate-950 rounded-xl text-xs font-semibold shadow-sm shadow-[#10B981]/20 transition-all font-mono"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Repository</span>
+            </button>
+
+            <button
+              onClick={onManageRepos}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#111827] hover:bg-[#1E293B] text-slate-200 border border-[#243244] hover:border-[#10B981]/30 rounded-xl text-xs font-semibold transition-all font-mono"
+            >
+              <Settings className="w-4 h-4 text-[#10B981]" />
+              <span>Manage</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -97,13 +130,23 @@ export const ConnectedRepositories: React.FC<ConnectedRepositoriesProps> = ({
         <div className="bg-[#111827] border border-dashed border-[#243244] rounded-[20px] p-12 text-center">
           <Github className="w-12 h-12 text-slate-600 mx-auto mb-3" />
           <h3 className="text-base font-semibold text-white mb-1">
-            {searchQuery ? 'No repositories match your search' : 'No connected repositories'}
+            {searchQuery ? 'No repositories match your search' : 'No repositories connected.'}
           </h3>
-          <p className="text-xs text-[#94A3B8] max-w-sm mx-auto">
+          <p className="text-xs text-[#94A3B8] max-w-sm mx-auto mb-6">
             {searchQuery
-              ? 'Try searching with a different repository name or clear the filter.'
+              ? 'Try searching with a different repository name, owner, or language.'
               : 'Connect your GitHub repository to begin autonomous AST scanning and patch generation.'}
           </p>
+
+          {!searchQuery && (
+            <button
+              onClick={onAddRepo}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#10B981] hover:bg-[#34D399] text-slate-950 rounded-xl text-xs font-semibold shadow-lg shadow-[#10B981]/20 transition-all font-mono"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Connect your first repository</span>
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -136,7 +179,7 @@ export const ConnectedRepositories: React.FC<ConnectedRepositoriesProps> = ({
             const mockMediums = [8, 6, 4, 3, 12];
             const mockLows = [12, 9, 6, 5, 15];
 
-            const score = mockScores[idx % mockScores.length];
+            const score = repo.security_score ?? mockScores[idx % mockScores.length];
             const criticalCount = mockCriticals[idx % mockCriticals.length];
             const highCount = mockHighs[idx % mockHighs.length];
             const mediumCount = mockMediums[idx % mockMediums.length];
@@ -166,7 +209,9 @@ export const ConnectedRepositories: React.FC<ConnectedRepositoriesProps> = ({
                         <h3 className="font-semibold text-white font-mono text-base group-hover:text-[#10B981] transition-colors line-clamp-1">
                           {repo.name}
                         </h3>
-                        <p className="text-xs text-[#94A3B8] font-mono line-clamp-1">{repo.full_name}</p>
+                        <p className="text-xs text-[#94A3B8] font-mono line-clamp-1">
+                          {repo.full_name}
+                        </p>
                       </div>
                     </div>
 
@@ -192,7 +237,9 @@ export const ConnectedRepositories: React.FC<ConnectedRepositoriesProps> = ({
 
                     <div className="bg-[#0F172A] border border-[#243244] px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-300">
                       <Clock className="w-3.5 h-3.5 text-slate-500" />
-                      <span className="font-mono truncate">{new Date(repo.updated_at).toLocaleDateString()}</span>
+                      <span className="font-mono truncate">
+                        {new Date(repo.updated_at).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
 
@@ -203,30 +250,47 @@ export const ConnectedRepositories: React.FC<ConnectedRepositoriesProps> = ({
                       Security Score
                     </span>
                     <span className="text-sm font-bold font-mono text-[#F8FAFC]">
-                      {score}<span className="text-xs text-[#94A3B8] font-normal">/100</span>
+                      {score}
+                      <span className="text-xs text-[#94A3B8] font-normal">/100</span>
                     </span>
                   </div>
 
                   {/* Vulnerabilities Breakdown */}
                   <div className="grid grid-cols-4 gap-2 text-center my-4">
                     <div className="bg-[#0F172A] border border-[#243244] p-2 rounded-xl">
-                      <span className="text-[10px] text-[#94A3B8] font-semibold uppercase block">Critical</span>
-                      <span className="text-sm font-bold font-mono text-red-400">{criticalCount}</span>
+                      <span className="text-[10px] text-[#94A3B8] font-semibold uppercase block">
+                        Critical
+                      </span>
+                      <span className="text-sm font-bold font-mono text-red-400">
+                        {criticalCount}
+                      </span>
                     </div>
 
                     <div className="bg-[#0F172A] border border-[#243244] p-2 rounded-xl">
-                      <span className="text-[10px] text-[#94A3B8] font-semibold uppercase block">High</span>
-                      <span className="text-sm font-bold font-mono text-amber-400">{highCount}</span>
+                      <span className="text-[10px] text-[#94A3B8] font-semibold uppercase block">
+                        High
+                      </span>
+                      <span className="text-sm font-bold font-mono text-amber-400">
+                        {highCount}
+                      </span>
                     </div>
 
                     <div className="bg-[#0F172A] border border-[#243244] p-2 rounded-xl">
-                      <span className="text-[10px] text-[#94A3B8] font-semibold uppercase block">Medium</span>
-                      <span className="text-sm font-bold font-mono text-blue-400">{mediumCount}</span>
+                      <span className="text-[10px] text-[#94A3B8] font-semibold uppercase block">
+                        Medium
+                      </span>
+                      <span className="text-sm font-bold font-mono text-blue-400">
+                        {mediumCount}
+                      </span>
                     </div>
 
                     <div className="bg-[#0F172A] border border-[#243244] p-2 rounded-xl">
-                      <span className="text-[10px] text-[#94A3B8] font-semibold uppercase block">Low</span>
-                      <span className="text-sm font-bold font-mono text-emerald-400">{lowCount}</span>
+                      <span className="text-[10px] text-[#94A3B8] font-semibold uppercase block">
+                        Low
+                      </span>
+                      <span className="text-sm font-bold font-mono text-emerald-400">
+                        {lowCount}
+                      </span>
                     </div>
                   </div>
                 </div>

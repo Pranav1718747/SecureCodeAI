@@ -5,10 +5,18 @@ from .models import Repository, ZipUpload
 
 
 class RepositorySerializer(serializers.ModelSerializer):
+    owner = serializers.SerializerMethodField()
+
     class Meta:
         model = Repository
         fields = '__all__'
         read_only_fields = ['organization', 'ast_index_status', 'created_at']
+
+    def get_owner(self, obj):
+        if obj.full_name and '/' in obj.full_name:
+            return obj.full_name.split('/')[0]
+        return obj.organization.name if obj.organization else 'securecode-ai'
+
 
 
 class RepositoryCreateSerializer(serializers.ModelSerializer):

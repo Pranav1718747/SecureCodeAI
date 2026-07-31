@@ -1,5 +1,5 @@
 import api from './api';
-import { Repository, PaginatedResponse, AddRepositoryPayload } from '../types/repository';
+import { Repository, PaginatedResponse, AddRepositoryPayload, GitHubRepo } from '../types/repository';
 
 export const repositoryService = {
   getRepositories: async (): Promise<PaginatedResponse<Repository>> => {
@@ -19,5 +19,16 @@ export const repositoryService = {
 
   deleteRepository: async (id: string): Promise<void> => {
     await api.delete(`/repositories/${id}/`);
+  },
+
+  refreshRepository: async (id: string): Promise<Repository> => {
+    const response = await api.patch<Repository>(`/repositories/${id}/refresh/`);
+    return response.data;
+  },
+
+  getGitHubUserRepos: async (): Promise<GitHubRepo[]> => {
+    const response = await api.get<GitHubRepo[]>('/repositories/github-user-repos/');
+    return response.data;
   }
 };
+
