@@ -26,22 +26,22 @@ export const DashboardPage = () => {
 
   return (
     <div className="max-w-[1600px] mx-auto px-8 pt-8 pb-12 space-y-12 animate-in fade-in duration-500">
-      {/* 1. Page Header (GitHub Enterprise Style) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+      {/* 1. Page Header (Enterprise SOC Style) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
               Enterprise SOC Platform
             </span>
-            <span className="text-xs font-mono text-slate-500">v2.4.0 Active</span>
+            <span className="text-xs font-mono text-[#94A3B8]">v2.4.0 Active</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-tight text-[#F8FAFC] flex items-center gap-3">
             Security Operations Center
-            <span className="text-emerald-400 text-xs font-mono font-normal bg-slate-900 border border-slate-800 px-3 py-1 rounded-lg">
+            <span className="text-[#10B981] text-xs font-mono font-normal bg-[#111827] border border-[#243244] px-3 py-1 rounded-lg">
               AI Guard Engine
             </span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#94A3B8] mt-1">
             Autonomous multi-agent threat analysis, vulnerability detection, and automated patch validation across repositories.
           </p>
         </div>
@@ -50,7 +50,7 @@ export const DashboardPage = () => {
           <Button
             onClick={() => setIsUploaderOpen(true)}
             icon={Plus}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30 rounded-xl"
+            className="bg-[#10B981] hover:bg-[#34D399] text-slate-950 font-semibold shadow-sm shadow-[#10B981]/20 rounded-xl"
           >
             Connect Repository
           </Button>
@@ -60,7 +60,7 @@ export const DashboardPage = () => {
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl flex items-center gap-3">
           <AlertCircle className="h-5 w-5 flex-shrink-0" />
-          <p className="text-xs">{error}</p>
+          <p className="text-xs font-mono">{error}</p>
         </div>
       )}
 

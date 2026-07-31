@@ -54,11 +54,11 @@ export const SettingsPage = () => {
   ]);
 
   const sections: SettingsSection[] = [
-    { id: 'profile', label: 'Profile', icon: <User className="h-4 w-4" /> },
-    { id: 'organization', label: 'Organization', icon: <Building2 className="h-4 w-4" /> },
-    { id: 'apikeys', label: 'API Keys', icon: <Key className="h-4 w-4" /> },
-    { id: 'aws', label: 'AWS Configuration', icon: <Cloud className="h-4 w-4" /> },
-    { id: 'github', label: 'GitHub Integration', icon: <Github className="h-4 w-4" /> },
+    { id: 'profile', label: 'Profile', icon: <User className="h-4 w-4 text-[#10B981]" /> },
+    { id: 'organization', label: 'Organization', icon: <Building2 className="h-4 w-4 text-[#10B981]" /> },
+    { id: 'apikeys', label: 'API Keys', icon: <Key className="h-4 w-4 text-[#10B981]" /> },
+    { id: 'aws', label: 'AWS Configuration', icon: <Cloud className="h-4 w-4 text-[#10B981]" /> },
+    { id: 'github', label: 'GitHub Integration', icon: <Github className="h-4 w-4 text-[#10B981]" /> },
   ];
 
   const handleSave = (section: string) => {
@@ -75,27 +75,27 @@ export const SettingsPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Settings className="h-6 w-6 text-slate-400" />
-          Settings
+    <div className="max-w-[1600px] mx-auto px-8 pt-8 pb-12 space-y-8 animate-in fade-in duration-500">
+      <div className="border-b border-white/[0.06] pb-6">
+        <h1 className="text-3xl font-bold text-[#F8FAFC] flex items-center gap-3">
+          <Settings className="h-7 w-7 text-[#10B981]" />
+          System Settings
         </h1>
-        <p className="text-slate-400 text-sm mt-1">Manage your account, integrations, and system configuration</p>
+        <p className="text-[#94A3B8] text-xs mt-1">Manage your enterprise account, integrations, and system configuration</p>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar navigation */}
-        <div className="w-56 flex-shrink-0">
+        <div className="w-full lg:w-64 flex-shrink-0">
           <nav className="space-y-1">
             {sections.map((s) => (
               <button
                 key={s.id}
                 onClick={() => setActiveSection(s.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                   activeSection === s.id
-                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#111827]'
                 }`}
               >
                 {s.icon}
@@ -106,59 +106,59 @@ export const SettingsPage = () => {
         </div>
 
         {/* Content area */}
-        <div className="flex-1 max-w-2xl">
+        <div className="flex-1 max-w-3xl">
           {/* Profile Section */}
           {activeSection === 'profile' && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <User className="h-5 w-5 text-blue-400" />
+            <div className="bg-[#111827] border border-white/[0.06] shadow-[0_10px_30px_rgba(0,0,0,0.25)] rounded-[20px] p-6 space-y-6">
+              <h2 className="text-lg font-semibold text-[#F8FAFC] flex items-center gap-2">
+                <User className="h-5 w-5 text-[#10B981]" />
                 Profile Settings
               </h2>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1.5">First Name</label>
+                  <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">First Name</label>
                   <input
                     type="text"
                     value={profile.firstName}
                     onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full bg-[#0F172A] border border-[#243244] rounded-xl px-3.5 py-2.5 text-[#F8FAFC] text-sm focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/30 transition-all font-sans"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1.5">Last Name</label>
+                  <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">Last Name</label>
                   <input
                     type="text"
                     value={profile.lastName}
                     onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full bg-[#0F172A] border border-[#243244] rounded-xl px-3.5 py-2.5 text-[#F8FAFC] text-sm focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/30 transition-all font-sans"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1.5">Email</label>
+                <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">Email</label>
                 <input
                   type="email"
                   value={profile.email}
                   disabled
-                  className="w-full bg-slate-950/50 border border-slate-700/50 rounded-lg px-3 py-2.5 text-slate-500 cursor-not-allowed"
+                  className="w-full bg-[#0F172A]/50 border border-[#243244]/50 rounded-xl px-3.5 py-2.5 text-slate-500 text-sm cursor-not-allowed font-mono"
                 />
-                <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
+                <p className="text-xs text-[#64748B] mt-1 font-mono">Email cannot be changed</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1.5">Role</label>
-                <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1.5 rounded-lg text-sm">
-                  <Shield className="h-3.5 w-3.5" />
+                <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">Role</label>
+                <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-mono font-medium">
+                  <Shield className="h-3.5 w-3.5 text-[#10B981]" />
                   {user?.role || 'DEVELOPER'}
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-800">
+              <div className="pt-4 border-t border-white/[0.06]">
                 <button
                   onClick={() => handleSave('profile')}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 bg-[#10B981] hover:bg-[#34D399] text-slate-950 px-5 py-2.5 rounded-xl text-xs font-semibold shadow-sm shadow-[#10B981]/20 transition-all"
                 >
                   {saved === 'profile' ? <CheckCircle2 className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                   {saved === 'profile' ? 'Saved!' : 'Save Changes'}
@@ -169,41 +169,41 @@ export const SettingsPage = () => {
 
           {/* Organization Section */}
           {activeSection === 'organization' && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-purple-400" />
+            <div className="bg-[#111827] border border-white/[0.06] shadow-[0_10px_30px_rgba(0,0,0,0.25)] rounded-[20px] p-6 space-y-6">
+              <h2 className="text-lg font-semibold text-[#F8FAFC] flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-[#10B981]" />
                 Organization
               </h2>
 
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1.5">Organization Name</label>
+                <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">Organization Name</label>
                 <input
                   type="text"
                   defaultValue="SecureCode AI Team"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-[#0F172A] border border-[#243244] rounded-xl px-3.5 py-2.5 text-[#F8FAFC] text-sm focus:outline-none focus:border-[#10B981]/50 focus:ring-1 focus:ring-[#10B981]/30 transition-all font-sans"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-3">Team Members</label>
+                <label className="block text-xs font-medium text-[#94A3B8] mb-3">Team Members</label>
                 <div className="space-y-2">
                   {[
                     { name: user?.first_name + ' ' + (user?.last_name || ''), email: user?.email, role: 'Admin' },
                   ].map((member, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-lg px-4 py-3"
+                      className="flex items-center justify-between bg-[#0F172A] border border-[#243244] rounded-xl px-4 py-3"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold">
+                        <div className="h-8 w-8 rounded-full bg-[#10B981]/20 flex items-center justify-center text-[#10B981] text-xs font-bold font-mono">
                           {member.name?.charAt(0) || 'U'}
                         </div>
                         <div>
-                          <p className="text-sm text-white font-medium">{member.name}</p>
-                          <p className="text-xs text-slate-500">{member.email}</p>
+                          <p className="text-sm text-[#F8FAFC] font-medium">{member.name}</p>
+                          <p className="text-xs text-[#94A3B8] font-mono">{member.email}</p>
                         </div>
                       </div>
-                      <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-1 rounded">
+                      <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full font-mono">
                         {member.role}
                       </span>
                     </div>
@@ -211,7 +211,7 @@ export const SettingsPage = () => {
                 </div>
               </div>
 
-              <button className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors">
+              <button className="flex items-center gap-2 text-xs text-[#10B981] hover:text-[#34D399] font-medium transition-colors">
                 <Plus className="h-4 w-4" />
                 Invite Team Member
               </button>
@@ -220,13 +220,13 @@ export const SettingsPage = () => {
 
           {/* API Keys Section */}
           {activeSection === 'apikeys' && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
+            <div className="bg-[#111827] border border-white/[0.06] shadow-[0_10px_30px_rgba(0,0,0,0.25)] rounded-[20px] p-6 space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <Key className="h-5 w-5 text-yellow-400" />
+                <h2 className="text-lg font-semibold text-[#F8FAFC] flex items-center gap-2">
+                  <Key className="h-5 w-5 text-[#10B981]" />
                   API Keys
                 </h2>
-                <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                <button className="flex items-center gap-2 bg-[#10B981] hover:bg-[#34D399] text-slate-950 px-4 py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors">
                   <Plus className="h-4 w-4" />
                   Generate Key
                 </button>
@@ -236,14 +236,14 @@ export const SettingsPage = () => {
                 {apiKeys.map((key) => (
                   <div
                     key={key.id}
-                    className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-lg px-4 py-3"
+                    className="flex items-center justify-between bg-[#0F172A] border border-[#243244] rounded-xl px-4 py-3"
                   >
                     <div>
-                      <p className="text-sm text-white font-medium">{key.name}</p>
-                      <p className="text-xs text-slate-500 font-mono mt-0.5">{key.prefix}</p>
+                      <p className="text-sm text-[#F8FAFC] font-medium">{key.name}</p>
+                      <p className="text-xs text-[#94A3B8] font-mono mt-0.5">{key.prefix}</p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-[#94A3B8] font-mono">
                         Expires {key.expires}
                       </span>
                       <button className="text-red-400/60 hover:text-red-400 transition-colors">
@@ -258,18 +258,18 @@ export const SettingsPage = () => {
 
           {/* AWS Configuration Section */}
           {activeSection === 'aws' && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Cloud className="h-5 w-5 text-orange-400" />
+            <div className="bg-[#111827] border border-white/[0.06] shadow-[0_10px_30px_rgba(0,0,0,0.25)] rounded-[20px] p-6 space-y-6">
+              <h2 className="text-lg font-semibold text-[#F8FAFC] flex items-center gap-2">
+                <Cloud className="h-5 w-5 text-[#10B981]" />
                 AWS Configuration
               </h2>
 
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1.5">AWS Region</label>
+                <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">AWS Region</label>
                 <select
                   value={awsConfig.region}
                   onChange={(e) => setAwsConfig({ ...awsConfig, region: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#0F172A] border border-[#243244] rounded-xl px-3.5 py-2.5 text-[#F8FAFC] text-sm focus:outline-none focus:border-[#10B981]/50 font-mono"
                 >
                   <option value="us-east-1">US East (N. Virginia)</option>
                   <option value="us-west-2">US West (Oregon)</option>
@@ -279,11 +279,11 @@ export const SettingsPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1.5">Bedrock Model ID</label>
+                <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">Bedrock Model ID</label>
                 <select
                   value={awsConfig.bedrockModelId}
                   onChange={(e) => setAwsConfig({ ...awsConfig, bedrockModelId: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#0F172A] border border-[#243244] rounded-xl px-3.5 py-2.5 text-[#F8FAFC] text-sm focus:outline-none focus:border-[#10B981]/50 font-mono"
                 >
                   <option value="anthropic.claude-3-5-sonnet-20240620-v1:0">Claude 3.5 Sonnet</option>
                   <option value="anthropic.claude-3-haiku-20240307-v1:0">Claude 3 Haiku</option>
@@ -292,31 +292,31 @@ export const SettingsPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1.5">SageMaker Endpoint</label>
+                <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">SageMaker Endpoint</label>
                 <input
                   type="text"
                   value={awsConfig.sagemakerEndpoint}
                   onChange={(e) => setAwsConfig({ ...awsConfig, sagemakerEndpoint: e.target.value })}
                   placeholder="securecodeai-qlora-endpoint"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-[#0F172A] border border-[#243244] rounded-xl px-3.5 py-2.5 text-[#F8FAFC] text-sm placeholder-slate-600 focus:outline-none focus:border-[#10B981]/50 transition-all font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1.5">IAM Role ARN</label>
+                <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">IAM Role ARN</label>
                 <input
                   type="text"
                   value={awsConfig.iamRoleArn}
                   onChange={(e) => setAwsConfig({ ...awsConfig, iamRoleArn: e.target.value })}
                   placeholder="arn:aws:iam::123456789012:role/SageMakerExecution"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-[#0F172A] border border-[#243244] rounded-xl px-3.5 py-2.5 text-[#F8FAFC] text-sm placeholder-slate-600 focus:outline-none focus:border-[#10B981]/50 transition-all font-mono"
                 />
               </div>
 
-              <div className="pt-4 border-t border-slate-800">
+              <div className="pt-4 border-t border-white/[0.06]">
                 <button
                   onClick={() => handleSave('aws')}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 bg-[#10B981] hover:bg-[#34D399] text-slate-950 px-5 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-colors"
                 >
                   {saved === 'aws' ? <CheckCircle2 className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                   {saved === 'aws' ? 'Saved!' : 'Save Configuration'}
@@ -327,21 +327,21 @@ export const SettingsPage = () => {
 
           {/* GitHub Integration Section */}
           {activeSection === 'github' && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Github className="h-5 w-5 text-slate-300" />
+            <div className="bg-[#111827] border border-white/[0.06] shadow-[0_10px_30px_rgba(0,0,0,0.25)] rounded-[20px] p-6 space-y-6">
+              <h2 className="text-lg font-semibold text-[#F8FAFC] flex items-center gap-2">
+                <Github className="h-5 w-5 text-[#10B981]" />
                 GitHub Integration
               </h2>
 
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1.5">Personal Access Token (PAT)</label>
+                <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">Personal Access Token (PAT)</label>
                 <div className="relative">
                   <input
                     type={showGithubPat ? 'text' : 'password'}
                     value={githubPat}
                     onChange={(e) => setGithubPat(e.target.value)}
                     placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 pr-10 text-white placeholder-slate-600 font-mono text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full bg-[#0F172A] border border-[#243244] rounded-xl px-3.5 py-2.5 pr-10 text-[#F8FAFC] placeholder-slate-600 font-mono text-sm focus:outline-none focus:border-[#10B981]/50 transition-colors"
                   />
                   <button
                     type="button"
@@ -351,26 +351,26 @@ export const SettingsPage = () => {
                     {showGithubPat ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mt-1.5">
-                  Required for automatic Pull Request creation. Needs <code className="text-slate-400">repo</code> scope.
+                <p className="text-xs text-[#94A3B8] mt-1.5 font-mono">
+                  Required for automatic Pull Request creation. Needs <code className="text-[#10B981]">repo</code> scope.
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 rounded-lg px-4 py-3">
-                <RefreshCw className="h-4 w-4 text-slate-500" />
+              <div className="flex items-center gap-3 bg-[#0F172A] border border-[#243244] rounded-xl px-4 py-3">
+                <RefreshCw className="h-4 w-4 text-[#10B981]" />
                 <div>
-                  <p className="text-sm text-white">Webhook Configuration</p>
-                  <p className="text-xs text-slate-500">Configure webhooks for automatic scanning on push events</p>
+                  <p className="text-sm text-[#F8FAFC]">Webhook Configuration</p>
+                  <p className="text-xs text-[#94A3B8]">Configure webhooks for automatic scanning on push events</p>
                 </div>
-                <span className="ml-auto text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded">
+                <span className="ml-auto text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-full font-mono">
                   Coming Soon
                 </span>
               </div>
 
-              <div className="pt-4 border-t border-slate-800">
+              <div className="pt-4 border-t border-white/[0.06]">
                 <button
                   onClick={() => handleSave('github')}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 bg-[#10B981] hover:bg-[#34D399] text-slate-950 px-5 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-colors"
                 >
                   {saved === 'github' ? <CheckCircle2 className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                   {saved === 'github' ? 'Saved!' : 'Save Integration'}

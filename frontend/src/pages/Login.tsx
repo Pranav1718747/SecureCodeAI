@@ -27,43 +27,43 @@ export const LoginPage = () => {
   return (
     <div className="w-full">
       <div className="flex justify-center mb-6">
-        <Shield className="h-12 w-12 text-blue-500" />
+        <Shield className="h-12 w-12 text-[#10B981]" />
       </div>
       
       {error && (
-        <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded mb-6 text-sm">
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl mb-6 text-xs font-mono">
           {error}
         </div>
       )}
 
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div>
-          <label className="block text-sm font-medium text-slate-300">
+          <label className="block text-xs font-medium text-[#94A3B8]">
             Email address
           </label>
-          <div className="mt-1">
+          <div className="mt-1.5">
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="appearance-none block w-full px-3 py-2 border border-slate-700 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-slate-800 text-white sm:text-sm transition-colors"
-              placeholder="admin@example.com"
+              className="appearance-none block w-full px-3.5 py-2.5 border border-[#243244] rounded-xl shadow-sm placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#10B981]/30 focus:border-[#10B981]/50 bg-[#0F172A] text-[#F8FAFC] sm:text-xs transition-colors font-mono"
+              placeholder="admin@securecode-ai.com"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300">
+          <label className="block text-xs font-medium text-[#94A3B8]">
             Password
           </label>
-          <div className="mt-1">
+          <div className="mt-1.5">
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="appearance-none block w-full px-3 py-2 border border-slate-700 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-slate-800 text-white sm:text-sm transition-colors"
+              className="appearance-none block w-full px-3.5 py-2.5 border border-[#243244] rounded-xl shadow-sm placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#10B981]/30 focus:border-[#10B981]/50 bg-[#0F172A] text-[#F8FAFC] sm:text-xs transition-colors font-mono"
               placeholder="••••••••"
             />
           </div>
@@ -73,9 +73,9 @@ export const LoginPage = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-xs font-semibold text-slate-950 bg-[#10B981] hover:bg-[#34D399] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10B981] focus:ring-offset-[#09111F] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            {isLoading ? 'Authenticating...' : 'Sign in'}
+            {isLoading ? 'Authenticating...' : 'Sign in to Enterprise SOC'}
           </button>
         </div>
       </form>

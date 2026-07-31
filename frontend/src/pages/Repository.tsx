@@ -39,7 +39,6 @@ export const RepositoryPage = () => {
     
     if (id && hasActiveScans) {
       intervalId = setInterval(() => {
-        // Silently fetch scans without triggering full page loading state
         scanService.getScans(id).then(scansData => {
           setScans(scansData.results);
         }).catch(err => console.error('Failed to poll scans', err));
@@ -76,7 +75,6 @@ export const RepositoryPage = () => {
       const newScan = await scanService.triggerScan(id);
       navigate(`/review/${newScan.id}`);
     } catch (err: any) {
-      // In a real app, use a toast notification instead of alert
       alert(err.message || 'Failed to trigger scan');
       setIsScanning(false);
     }
@@ -86,10 +84,10 @@ export const RepositoryPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
         <div className="relative">
-          <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full" />
-          <Loader2 className="h-10 w-10 text-blue-500 animate-spin relative z-10" />
+          <div className="absolute inset-0 bg-[#10B981] blur-xl opacity-20 rounded-full" />
+          <Loader2 className="h-10 w-10 text-[#10B981] animate-spin relative z-10" />
         </div>
-        <p className="text-slate-400 font-medium animate-pulse">Loading workspace...</p>
+        <p className="text-[#94A3B8] font-medium text-sm animate-pulse font-mono">Loading workspace telemetry...</p>
       </div>
     );
   }
@@ -102,11 +100,10 @@ export const RepositoryPage = () => {
     );
   }
 
-  // Derive metrics
   const totalVulnerabilities = scans.reduce((acc, scan) => acc + (scan.total_vulnerabilities || 0), 0);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-20 animate-in fade-in duration-500">
+    <div className="max-w-[1600px] mx-auto px-8 pt-8 pb-12 space-y-8 animate-in fade-in duration-500">
       <RepositoryHeader repo={repo} />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -120,7 +117,7 @@ export const RepositoryPage = () => {
 
       <RepositoryMetrics totalScans={scans.length} totalVulnerabilities={totalVulnerabilities} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pt-6 border-t border-slate-800/50 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pt-6 border-t border-white/[0.06] mt-8">
         {/* Main Content Area (History) */}
         <div className="lg:col-span-3 space-y-6">
           <FilterToolbar />

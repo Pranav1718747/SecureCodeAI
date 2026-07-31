@@ -44,10 +44,10 @@ export const ReviewPage = () => {
 
   if (isLoading && !scan) {
     return (
-      <div className="flex justify-center h-screen items-center bg-[#0a0f1c]">
+      <div className="flex justify-center h-screen items-center bg-[#09111F]">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
-          <p className="text-slate-400 text-sm font-medium animate-pulse">Initializing Workspace...</p>
+          <Loader2 className="h-8 w-8 text-[#10B981] animate-spin" />
+          <p className="text-[#94A3B8] text-sm font-mono animate-pulse">Initializing Investigation Workspace...</p>
         </div>
       </div>
     );
@@ -55,8 +55,8 @@ export const ReviewPage = () => {
 
   if (!scan) {
     return (
-      <div className="flex justify-center h-screen items-center bg-[#0a0f1c]">
-        <div className="flex items-center gap-2 text-rose-400 bg-rose-500/10 px-4 py-3 rounded-lg border border-rose-500/20">
+      <div className="flex justify-center h-screen items-center bg-[#09111F]">
+        <div className="flex items-center gap-2 text-red-400 bg-red-500/10 px-4 py-3 rounded-xl border border-red-500/20 font-mono text-sm">
           <AlertCircle className="h-5 w-5" />
           Scan not found
         </div>
@@ -118,7 +118,7 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
     if (!selectedVuln) return;
     setIsGeneratingPatch(true);
     setGenerationError(null);
-    setActiveTab('patch'); // Switch to patch tab to show loading
+    setActiveTab('patch');
 
     try {
       const generatedPatch = await patchService.generatePatch(selectedVuln.id);
@@ -158,7 +158,7 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] bg-[#0a0f1c] overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] bg-[#09111F] overflow-hidden">
       <StickyActionBar 
         scanId={scanId} 
         repoId={repoId} 
@@ -169,7 +169,7 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
       
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* LEFT PANEL - Vulnerability Explorer (25%) */}
-        <div className="w-[320px] lg:w-[400px] shrink-0 border-r border-slate-800 flex flex-col z-20">
+        <div className="w-[320px] lg:w-[400px] shrink-0 border-r border-[#243244] flex flex-col z-20 bg-[#0F172A]">
           <VulnerabilityExplorer 
             vulnerabilities={vulnerabilities}
             patches={patches}
@@ -177,13 +177,13 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
             onSelect={(vuln) => {
               setSelectedVuln(vuln);
               setActiveTab('code');
-              setGenerationError(null); // Clear errors when switching
+              setGenerationError(null);
             }}
           />
         </div>
         
         {/* RIGHT PANEL - Investigation Workspace (75%) */}
-        <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117] relative">
+        <div className="flex-1 flex flex-col min-w-0 bg-[#09111F] relative">
           {selectedVuln ? (
             <>
               <WorkspaceTabs 
@@ -193,7 +193,7 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
                 hasPR={!!prData}
               />
               
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto p-6">
                 {activeTab === 'code' && <VulnerableCodeTab vuln={selectedVuln} />}
                 {activeTab === 'patch' && (
                   <AIPatchTab 
@@ -212,10 +212,10 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-center text-slate-500">
-                <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                <p className="font-medium text-slate-400">No vulnerability selected</p>
-                <p className="text-sm mt-1">Select an item from the explorer to begin investigation.</p>
+              <div className="text-center text-[#94A3B8]">
+                <AlertCircle className="h-12 w-12 mx-auto mb-4 text-[#10B981] opacity-40" />
+                <p className="font-semibold text-[#F8FAFC]">No vulnerability selected</p>
+                <p className="text-sm mt-1 text-[#94A3B8]">Select an item from the explorer to begin investigation.</p>
               </div>
             </div>
           )}

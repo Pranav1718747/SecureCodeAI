@@ -2,9 +2,9 @@ import { motion } from 'framer-motion';
 
 export const AnimatedProgressBar = ({ percentage }: { percentage: number }) => {
   return (
-    <div className="w-full h-4 bg-slate-900 rounded-full overflow-hidden relative border border-slate-800 shadow-inner">
+    <div className="w-full h-3.5 bg-[#0F172A] rounded-full overflow-hidden relative border border-[#243244] shadow-inner">
       <motion.div
-        className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full relative"
+        className="h-full bg-gradient-to-r from-[#10B981] via-emerald-400 to-[#34D399] rounded-full relative"
         initial={{ width: 0 }}
         animate={{ width: `${Math.max(1, percentage)}%` }}
         transition={{ type: "spring", bounce: 0, duration: 0.8 }}

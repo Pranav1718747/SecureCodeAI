@@ -21,25 +21,25 @@ export const LiveScanDashboard = () => {
   } = useLiveScan();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500">
+    <div className="max-w-[1600px] mx-auto px-8 pt-8 pb-12 space-y-8 animate-in fade-in duration-500">
       <ProgressHeader />
       
-      <div className="mb-8">
+      <div className="bg-[#111827] border border-white/[0.06] shadow-[0_10px_30px_rgba(0,0,0,0.25)] rounded-[20px] p-6">
         <div className="flex justify-between items-end mb-3">
           <div>
-            <h2 className="text-lg font-semibold text-white">Overall Progress</h2>
-            <p className="text-sm text-slate-400">
+            <h2 className="text-lg font-semibold text-[#F8FAFC]">Overall Scan Progress</h2>
+            <p className="text-xs text-[#94A3B8] font-mono mt-0.5">
               {status === 'FAILED' ? 'Scan Failed' : currentScanner}
             </p>
           </div>
-          <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+          <div className="text-3xl font-bold font-mono text-[#10B981]">
             {Math.round(overallProgressPct)}%
           </div>
         </div>
         <AnimatedProgressBar percentage={overallProgressPct} />
       </div>
 
-      <div className="mb-8">
+      <div>
         <LiveMetrics 
           elapsedSeconds={elapsedSeconds}
           etaSeconds={etaSeconds}
@@ -49,7 +49,7 @@ export const LiveScanDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col">
+        <div className="lg:col-span-2 flex flex-col gap-6">
           <CurrentFileCard 
             currentFolder={currentFolder} 
             currentFile={currentFile} 

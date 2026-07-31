@@ -13,10 +13,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', icon: Icon, isLoading, children, disabled, ...props }, ref) => {
     const variants = {
-      primary: 'bg-emerald-600 text-white hover:bg-emerald-500 focus:ring-emerald-500 shadow-sm shadow-emerald-500/20',
-      secondary: 'bg-slate-800 text-slate-200 hover:bg-slate-700 focus:ring-slate-500 border border-slate-700',
+      primary: 'bg-[#10B981] text-slate-950 hover:bg-[#34D399] focus:ring-[#10B981] shadow-sm shadow-[#10B981]/20 font-semibold',
+      secondary: 'bg-transparent text-[#F8FAFC] hover:bg-[#0F172A] focus:ring-slate-500 border border-[#243244]',
       danger: 'bg-red-500/10 text-red-400 hover:bg-red-500/20 focus:ring-red-500 border border-red-500/20',
-      ghost: 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800 focus:ring-slate-500',
+      ghost: 'bg-transparent text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#0F172A] focus:ring-slate-500',
     };
 
     const sizes = {
@@ -30,7 +30,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={classNames(
-          'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:opacity-50 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#09111F] disabled:opacity-50 disabled:cursor-not-allowed',
           variants[variant],
           sizes[size],
           className
@@ -51,40 +51,40 @@ Button.displayName = 'Button';
 
 // Card Component
 export const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => (
-  <div className={classNames('bg-slate-900 border border-slate-800 rounded-xl overflow-hidden', className)}>
+  <div className={classNames('bg-[#111827] border border-white/[0.06] shadow-[0_10px_30px_rgba(0,0,0,0.25)] rounded-[20px] p-6 overflow-hidden transition-all', className)}>
     {children}
   </div>
 );
 
 export const CardHeader: React.FC<{ title: string; description?: string; action?: React.ReactNode; icon?: React.ReactNode }> = ({ title, description, action, icon }) => (
-  <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-start">
+  <div className="pb-4 mb-4 border-b border-white/[0.06] flex justify-between items-start">
     <div>
-      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+      <h3 className="text-base font-semibold text-[#F8FAFC] flex items-center gap-2">
         {icon}
         {title}
       </h3>
-      {description && <p className="text-sm text-slate-400 mt-1">{description}</p>}
+      {description && <p className="text-xs text-[#94A3B8] mt-1">{description}</p>}
     </div>
     {action && <div>{action}</div>}
   </div>
 );
 
 export const CardContent: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => (
-  <div className={classNames('p-6', className)}>{children}</div>
+  <div className={classNames('', className)}>{children}</div>
 );
 
 // Badge Component
 export const Badge: React.FC<{ children: React.ReactNode; variant?: 'success' | 'warning' | 'error' | 'info' | 'default'; className?: string }> = ({ children, variant = 'default', className }) => {
   const variants = {
     success: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    warning: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     error: 'bg-red-500/10 text-red-400 border-red-500/20',
     info: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    default: 'bg-slate-800 text-slate-300 border-slate-700',
+    default: 'bg-[#0F172A] text-[#94A3B8] border-[#243244]',
   };
   
   return (
-    <span className={classNames('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border', variants[variant], className)}>
+    <span className={classNames('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border font-mono', variants[variant], className)}>
       {children}
     </span>
   );

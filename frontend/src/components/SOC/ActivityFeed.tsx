@@ -58,19 +58,19 @@ export const ActivityFeed: React.FC = () => {
   const getIcon = (type: ActivityItem['type']) => {
     switch (type) {
       case 'pr':
-        return <GitPullRequest className="w-4 h-4 text-emerald-400" />;
+        return <GitPullRequest className="w-4 h-4 text-[#10B981]" />;
       case 'validation':
-        return <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
+        return <CheckCircle2 className="w-4 h-4 text-[#10B981]" />;
       case 'patch':
-        return <Cpu className="w-4 h-4 text-teal-400" />;
+        return <Cpu className="w-4 h-4 text-[#34D399]" />;
       case 'detection':
         return <AlertTriangle className="w-4 h-4 text-amber-400" />;
       case 'branch':
-        return <GitBranch className="w-4 h-4 text-blue-400" />;
+        return <GitBranch className="w-4 h-4 text-[#10B981]" />;
       case 'scan':
-        return <ShieldCheck className="w-4 h-4 text-emerald-400" />;
+        return <ShieldCheck className="w-4 h-4 text-[#10B981]" />;
       default:
-        return <Activity className="w-4 h-4 text-slate-400" />;
+        return <Activity className="w-4 h-4 text-[#94A3B8]" />;
     }
   };
 
@@ -79,20 +79,20 @@ export const ActivityFeed: React.FC = () => {
       initial={{ opacity: 0, x: 15 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
-      className="bg-slate-900/90 border border-slate-800/90 rounded-[18px] p-6 shadow-lg sticky top-6 max-h-[80vh] overflow-y-auto flex flex-col justify-between"
+      className="bg-[#111827] border border-white/[0.06] shadow-[0_10px_30px_rgba(0,0,0,0.25)] rounded-[20px] p-6 sticky top-6 max-h-[80vh] overflow-y-auto flex flex-col justify-between"
     >
       <div>
-        {/* GitHub Enterprise Style Section Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800/80">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/[0.06]">
           <div>
-            <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              <Activity className="w-5 h-5 text-emerald-400 animate-pulse" />
+            <h3 className="text-base font-semibold text-[#F8FAFC] flex items-center gap-2">
+              <Activity className="w-5 h-5 text-[#10B981] animate-pulse" />
               Live SOC Activity
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Real-time AI security operations</p>
+            <p className="text-xs text-[#94A3B8] mt-1">Real-time AI security operations</p>
           </div>
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-[11px] font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" />
             LIVE
           </span>
         </div>
@@ -104,17 +104,17 @@ export const ActivityFeed: React.FC = () => {
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: idx * 0.08 }}
-              className="flex items-start gap-3 p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl hover:border-emerald-500/30 transition-colors"
+              className="flex items-start gap-3 p-3 bg-[#0F172A] border border-[#243244] rounded-xl hover:border-[#10B981]/30 transition-colors"
             >
-              <div className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 mt-0.5">
+              <div className="p-1.5 rounded-lg bg-[#111827] border border-[#243244] mt-0.5">
                 {getIcon(event.type)}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-slate-200 font-medium line-clamp-2">{event.title}</p>
-                <div className="flex items-center gap-2 mt-1.5 text-[10px] text-slate-400 font-mono">
-                  <span className="text-emerald-400 font-semibold">{event.repo}</span>
+                <div className="flex items-center gap-2 mt-1.5 text-[10px] text-[#94A3B8] font-mono">
+                  <span className="text-[#10B981] font-semibold font-mono">{event.repo}</span>
                   <span>•</span>
-                  <span>{event.timestamp}</span>
+                  <span className="font-mono">{event.timestamp}</span>
                 </div>
               </div>
             </motion.div>
@@ -122,8 +122,8 @@ export const ActivityFeed: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-6 pt-4 border-t border-slate-800/80 text-center">
-        <span className="text-xs text-slate-400 hover:text-emerald-400 cursor-pointer transition-colors font-medium">
+      <div className="mt-6 pt-4 border-t border-white/[0.06] text-center">
+        <span className="text-xs text-[#94A3B8] hover:text-[#10B981] cursor-pointer transition-colors font-medium">
           View full audit trail logs →
         </span>
       </div>
