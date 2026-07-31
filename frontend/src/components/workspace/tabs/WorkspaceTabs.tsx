@@ -20,31 +20,31 @@ export const WorkspaceTabs = ({ activeTab, onTabChange, hasPatch, hasPR }: Works
   ];
 
   return (
-    <div className="flex items-center gap-1 bg-[#0F172A] px-4 pt-2 border-b border-[#243244] sticky top-0 z-10">
+    <div className="flex items-center gap-1 bg-[#111827] px-6 pt-2.5 border-b border-white/[0.08] sticky top-0 z-10 font-sans">
       {tabs.map(tab => {
         const isActive = activeTab === tab.id;
         const isDisabled = tab.disabled;
-        
+
         return (
           <button
             key={tab.id}
             onClick={() => !isDisabled && onTabChange(tab.id)}
             disabled={isDisabled}
-            className={`relative flex items-center gap-2 px-4 py-2.5 text-xs font-semibold transition-colors ${
-              isActive 
-                ? 'text-[#10B981]' 
-                : isDisabled 
-                  ? 'text-slate-600 cursor-not-allowed' 
-                  : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#111827] rounded-t-lg'
+            className={`relative flex items-center gap-2 px-4 py-3 text-xs font-bold transition-all ${
+              isActive
+                ? 'text-[#18E6A8]'
+                : isDisabled
+                  ? 'text-[#64748B] cursor-not-allowed'
+                  : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#151E2D] rounded-t-xl'
             }`}
           >
-            <tab.icon className={`h-4 w-4 ${isActive ? 'text-[#10B981]' : isDisabled ? 'text-slate-700' : 'text-[#94A3B8]'}`} />
-            {tab.label}
-            
+            <tab.icon className={`h-4 w-4 ${isActive ? 'text-[#18E6A8]' : isDisabled ? 'text-[#64748B]' : 'text-[#94A3B8]'}`} />
+            <span>{tab.label}</span>
+
             {isActive && (
               <motion.div
                 layoutId="activeWorkspaceTab"
-                className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-[#10B981]"
+                className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-[#18E6A8] shadow-[0_0_10px_rgba(24,230,168,0.5)]"
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
             )}

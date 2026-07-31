@@ -23,7 +23,7 @@ import { PullRequestTab } from '../components/workspace/tabs/PullRequestTab';
 export const ReviewPage = () => {
   const { scanId } = useParams<{ scanId: string }>();
   const dispatch = useDispatch<AppDispatch>();
-  
+
   const scan = useSelector((state: RootState) => state.scans.activeScan);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,20 +34,25 @@ export const ReviewPage = () => {
       } else {
         setIsLoading(true);
       }
-      
+
       Promise.all([
         dispatch(fetchScanDetail(scanId)),
-        dispatch(fetchVulnerabilities(scanId))
+        dispatch(fetchVulnerabilities(scanId)),
       ]).finally(() => setIsLoading(false));
     }
   }, [scanId, dispatch]);
 
   if (isLoading && !scan) {
     return (
-      <div className="flex justify-center h-screen items-center bg-[#09111F]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 text-[#10B981] animate-spin" />
-          <p className="text-[#94A3B8] text-sm font-mono animate-pulse">Initializing Investigation Workspace...</p>
+      <div className="flex justify-center h-screen items-center bg-[#070B16] font-sans">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="relative">
+            <div className="absolute inset-0 bg-[#18E6A8] blur-xl opacity-20 rounded-full" />
+            <Loader2 className="h-10 w-10 text-[#18E6A8] animate-spin relative z-10" />
+          </div>
+          <p className="text-[#94A3B8] text-xs font-mono animate-pulse">
+            Initializing Investigation Workspace...
+          </p>
         </div>
       </div>
     );
@@ -55,10 +60,10 @@ export const ReviewPage = () => {
 
   if (!scan) {
     return (
-      <div className="flex justify-center h-screen items-center bg-[#09111F]">
-        <div className="flex items-center gap-2 text-red-400 bg-red-500/10 px-4 py-3 rounded-xl border border-red-500/20 font-mono text-sm">
+      <div className="flex justify-center h-screen items-center bg-[#070B16] font-sans">
+        <div className="flex items-center gap-3 text-[#F05B68] bg-[#F05B68]/10 px-5 py-4 rounded-2xl border border-[#F05B68]/20 font-mono text-xs shadow-lg">
           <AlertCircle className="h-5 w-5" />
-          Scan not found
+          <span>Scan record not found or inaccessible</span>
         </div>
       </div>
     );
@@ -80,7 +85,7 @@ export const ReviewPage = () => {
 const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
   const scan = useSelector((state: RootState) => state.scans.activeScan);
   const vulnerabilities = useSelector((state: RootState) => state.scans.vulnerabilities);
-  
+
   const [selectedVuln, setSelectedVuln] = useState<Vulnerability | null>(null);
   const [patches, setPatches] = useState<Record<string, Patch>>({});
   const [activeTab, setActiveTab] = useState<TabType>('code');
@@ -93,12 +98,12 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
 
   useEffect(() => {
     if (scan?.status === 'COMPLETED' || scan?.status === 'FAILED') {
-      scanService.getVulnerabilities(scanId).then(vulnsData => {
+      scanService.getVulnerabilities(scanId).then((vulnsData) => {
         if (vulnsData.results.length > 0) {
-          setSelectedVuln(prev => prev || vulnsData.results[0]);
-          patchService.getPatches().then(patchesData => {
+          setSelectedVuln((prev) => prev || vulnsData.results[0]);
+          patchService.getPatches().then((patchesData) => {
             const patchesMap: Record<string, Patch> = {};
-            patchesData.results.forEach(p => {
+            patchesData.results.forEach((p) => {
               patchesMap[p.vulnerability] = p;
             });
             setPatches(patchesMap);
@@ -122,12 +127,14 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
 
     try {
       const generatedPatch = await patchService.generatePatch(selectedVuln.id);
-      setPatches(prev => ({
+      setPatches((prev) => ({
         ...prev,
-        [selectedVuln.id]: generatedPatch
+        [selectedVuln.id]: generatedPatch,
       }));
     } catch (err: any) {
-      setGenerationError(err.response?.data?.error || err.message || 'Network error while generating patch');
+      setGenerationError(
+        err.response?.data?.error || err.message || 'Network error while generating patch'
+      );
     } finally {
       setIsGeneratingPatch(false);
     }
@@ -139,15 +146,15 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
     setGenerationError(null);
     try {
       const previewData = await patchService.createPRPreview(patch.id);
-      setPatches(prev => ({
+      setPatches((prev) => ({
         ...prev,
         [patch.vulnerability]: {
           ...patch,
           status: 'PR_OPENED',
           pr_preview_data: previewData,
           pr_url: previewData.pr_url,
-          pr_number: previewData.pr_number
-        }
+          pr_number: previewData.pr_number,
+        },
       }));
       setIsCreatingPR(false);
       setActiveTab('pr');
@@ -158,19 +165,19 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] bg-[#09111F] overflow-hidden">
-      <StickyActionBar 
-        scanId={scanId} 
-        repoId={repoId} 
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] bg-[#070B16] text-[#F8FAFC] font-sans overflow-hidden antialiased">
+      <StickyActionBar
+        scanId={scanId}
+        repoId={repoId}
         hasPatch={!!patch}
         isGeneratingPatch={isGeneratingPatch}
         onGeneratePatch={handleGeneratePatch}
       />
-      
+
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* LEFT PANEL - Vulnerability Explorer (25%) */}
-        <div className="w-[320px] lg:w-[400px] shrink-0 border-r border-[#243244] flex flex-col z-20 bg-[#0F172A]">
-          <VulnerabilityExplorer 
+        {/* LEFT PANEL - Vulnerability Explorer */}
+        <div className="w-[320px] lg:w-[400px] shrink-0 border-r border-white/[0.08] flex flex-col z-20 bg-[#111827]">
+          <VulnerabilityExplorer
             vulnerabilities={vulnerabilities}
             patches={patches}
             selectedVulnId={selectedVuln?.id || null}
@@ -181,23 +188,23 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
             }}
           />
         </div>
-        
-        {/* RIGHT PANEL - Investigation Workspace (75%) */}
-        <div className="flex-1 flex flex-col min-w-0 bg-[#09111F] relative">
+
+        {/* RIGHT PANEL - Investigation Workspace */}
+        <div className="flex-1 flex flex-col min-w-0 bg-[#070B16] relative">
           {selectedVuln ? (
             <>
-              <WorkspaceTabs 
-                activeTab={activeTab} 
+              <WorkspaceTabs
+                activeTab={activeTab}
                 onTabChange={setActiveTab}
                 hasPatch={!!patch}
                 hasPR={!!prData}
               />
-              
-              <div className="flex-1 overflow-y-auto p-6">
+
+              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                 {activeTab === 'code' && <VulnerableCodeTab vuln={selectedVuln} />}
                 {activeTab === 'patch' && (
-                  <AIPatchTab 
-                    patch={patch} 
+                  <AIPatchTab
+                    patch={patch}
                     isGenerating={isGeneratingPatch}
                     onGenerate={handleGeneratePatch}
                     error={generationError}
@@ -205,17 +212,21 @@ const WorkspaceLayout = ({ scanId }: { scanId: string }) => {
                     onCreatePR={handleCreatePR}
                   />
                 )}
-                {activeTab === 'validation' && patch && <ValidationTab vuln={selectedVuln} patch={patch} />}
+                {activeTab === 'validation' && patch && (
+                  <ValidationTab vuln={selectedVuln} patch={patch} />
+                )}
                 {activeTab === 'simulation' && <AttackSimulationTab vuln={selectedVuln} patch={patch} />}
                 {activeTab === 'pr' && prData && <PullRequestTab prData={prData} />}
               </div>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-center text-[#94A3B8]">
-                <AlertCircle className="h-12 w-12 mx-auto mb-4 text-[#10B981] opacity-40" />
-                <p className="font-semibold text-[#F8FAFC]">No vulnerability selected</p>
-                <p className="text-sm mt-1 text-[#94A3B8]">Select an item from the explorer to begin investigation.</p>
+              <div className="text-center text-[#94A3B8] font-sans">
+                <AlertCircle className="h-12 w-12 mx-auto mb-4 text-[#18E6A8] opacity-50" />
+                <p className="font-bold text-[#F8FAFC]">No vulnerability selected</p>
+                <p className="text-xs mt-1 text-[#94A3B8] font-mono">
+                  Select an item from the explorer to begin investigation.
+                </p>
               </div>
             </div>
           )}

@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Vulnerability, Patch } from '../../../types/scan';
 import { Shield, Zap, AlertTriangle, TrendingDown, Activity, Lock, ShieldCheck, Target } from 'lucide-react';
 
-// ─── SIMULATION DATA GENERATOR ──────────────────────────
-
 interface SimulationNode {
   label: string;
   detail?: string;
@@ -124,7 +122,7 @@ function generateSimulation(vuln: Vulnerability, _patch: Patch | null): Simulati
       risk_before: 98, risk_after: 5,
       attack_success_before: 100, attack_success_after: 0,
       owasp: 'A03:2021', cwe: 'CWE-78',
-      malicious_input: "; rm -rf / --no-preserve-root",
+      malicious_input: '; rm -rf / --no-preserve-root',
       impact: 'Remote code execution on server',
     };
   }
@@ -154,57 +152,7 @@ function generateSimulation(vuln: Vulnerability, _patch: Patch | null): Simulati
     };
   }
 
-  // SSRF
-  if (cwe.includes('918') || title.includes('ssrf') || title.includes('server-side request')) {
-    return {
-      title: 'Server-Side Request Forgery',
-      before: [
-        { label: 'User Input', detail: 'http://169.254.169.254/metadata' },
-        { label: 'Server Fetches URL', detail: 'requests.get(user_url)' },
-        { label: 'Internal Network Access', detail: 'Request reaches cloud metadata service' },
-        { label: 'Credential Harvest', detail: 'IAM tokens and secrets returned' },
-        { label: 'Cloud Compromise', detail: 'Lateral movement into infrastructure' },
-      ],
-      after: [
-        { label: 'User Input', detail: 'http://169.254.169.254/metadata' },
-        { label: 'URL Allowlist', detail: 'Only approved domains permitted' },
-        { label: 'IP Validation', detail: 'Private/internal IPs rejected' },
-        { label: 'Request Blocked', detail: 'SSRF attempt denied before fetch' },
-      ],
-      risk_before: 90, risk_after: 7,
-      attack_success_before: 100, attack_success_after: 0,
-      owasp: 'A10:2021', cwe: 'CWE-918',
-      malicious_input: 'http://169.254.169.254/latest/meta-data/',
-      impact: 'Cloud infrastructure credential theft',
-    };
-  }
-
-  // Insecure Deserialization
-  if (cwe.includes('502') || title.includes('deserialization') || title.includes('pickle') || title.includes('yaml.load')) {
-    return {
-      title: 'Insecure Deserialization',
-      before: [
-        { label: 'Malicious Payload', detail: 'Crafted serialized object' },
-        { label: 'Unsafe Deserializer', detail: 'pickle.loads() / yaml.load()' },
-        { label: 'Object Instantiation', detail: 'Arbitrary class instantiated' },
-        { label: 'Remote Code Execution', detail: '__reduce__ gadget chain fires' },
-        { label: 'System Compromise', detail: 'Attacker code runs on server' },
-      ],
-      after: [
-        { label: 'Malicious Payload', detail: 'Crafted serialized object' },
-        { label: 'Safe Deserializer', detail: 'yaml.safe_load() / JSON parsing' },
-        { label: 'Type Restriction', detail: 'Only primitive types allowed' },
-        { label: 'Gadget Chain Blocked', detail: 'No arbitrary object instantiation' },
-      ],
-      risk_before: 92, risk_after: 6,
-      attack_success_before: 100, attack_success_after: 0,
-      owasp: 'A08:2021', cwe: 'CWE-502',
-      malicious_input: 'b"\\x80\\x04\\x95..."  (crafted pickle)',
-      impact: 'Remote code execution via deserialization',
-    };
-  }
-
-  // Generic fallback from vuln metadata
+  // Generic Fallback
   return {
     title: vuln.title || 'Security Vulnerability',
     before: [
@@ -229,9 +177,14 @@ function generateSimulation(vuln: Vulnerability, _patch: Patch | null): Simulati
   };
 }
 
-// ─── ANIMATED NODE ──────────────────────────────────────
-
-const AttackNode = ({ node, index, isActive, isPassed, isLast, variant }: {
+const AttackNode = ({
+  node,
+  index,
+  isActive,
+  isPassed,
+  isLast,
+  variant,
+}: {
   node: SimulationNode;
   index: number;
   isActive: boolean;
@@ -240,62 +193,69 @@ const AttackNode = ({ node, index, isActive, isPassed, isLast, variant }: {
   variant: 'before' | 'after';
 }) => {
   const isBlocked = variant === 'after' && isLast;
-  const isCompromised = variant === 'before' && isLast;
 
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.08 }}
-      className="flex flex-col items-center"
+      className="flex flex-col items-center font-sans"
     >
-      {/* Node */}
       <div className="relative">
         <motion.div
           className={`
-            relative w-full min-w-[160px] max-w-[200px] px-4 py-3 rounded-xl border text-center transition-all duration-300
-            ${isActive
-              ? variant === 'before'
-                ? 'border-red-500/60 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
-                : isBlocked
-                  ? 'border-emerald-500/60 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
-                  : 'border-red-500/60 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
-              : isPassed
+            relative w-full min-w-[160px] max-w-[200px] px-4 py-3 rounded-2xl border text-center transition-all duration-300
+            ${
+              isActive
                 ? variant === 'before'
-                  ? 'border-red-500/20 bg-red-500/5'
+                  ? 'border-[#F05B68] bg-[#F05B68]/15 shadow-[0_0_25px_rgba(240,91,104,0.3)]'
                   : isBlocked
-                    ? 'border-emerald-500/20 bg-emerald-500/5'
-                    : 'border-slate-700 bg-slate-800/50'
-                : 'border-slate-800 bg-slate-900/50'
+                  ? 'border-[#18E6A8] bg-[#18E6A8]/15 shadow-[0_0_25px_rgba(24,230,168,0.3)]'
+                  : 'border-[#F05B68] bg-[#F05B68]/15 shadow-[0_0_25px_rgba(240,91,104,0.3)]'
+                : isPassed
+                ? variant === 'before'
+                  ? 'border-[#F05B68]/30 bg-[#F05B68]/10'
+                  : isBlocked
+                  ? 'border-[#18E6A8]/30 bg-[#18E6A8]/10'
+                  : 'border-white/[0.08] bg-[#151E2D]'
+                : 'border-white/[0.06] bg-[#111827]'
             }
           `}
           animate={isActive ? { scale: [1, 1.03, 1] } : {}}
           transition={isActive ? { duration: 1.2, repeat: Infinity } : {}}
         >
-          {/* Glow ring */}
           {isActive && (
             <motion.div
-              className={`absolute inset-0 rounded-xl ${
-                isBlocked ? 'bg-emerald-500/10' : 'bg-red-500/10'
+              className={`absolute inset-0 rounded-2xl ${
+                isBlocked ? 'bg-[#18E6A8]/10' : 'bg-[#F05B68]/10'
               }`}
               animate={{ opacity: [0, 0.5, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
           )}
 
-          <p className={`text-xs font-bold relative z-10 ${
-            isActive
-              ? isBlocked ? 'text-emerald-300' : isCompromised ? 'text-red-300' : 'text-red-300'
-              : isPassed
-                ? isBlocked ? 'text-emerald-400/70' : 'text-slate-300'
-                : 'text-slate-500'
-          }`}>
-            {isBlocked && isPassed ? '🛡️ ' : ''}{node.label}
+          <p
+            className={`text-xs font-bold relative z-10 ${
+              isActive
+                ? isBlocked
+                  ? 'text-[#18E6A8]'
+                  : 'text-[#F05B68]'
+                : isPassed
+                ? isBlocked
+                  ? 'text-[#18E6A8]'
+                  : 'text-[#F8FAFC]'
+                : 'text-[#64748B]'
+            }`}
+          >
+            {isBlocked && isPassed ? '🛡️ ' : ''}
+            {node.label}
           </p>
           {node.detail && (
-            <p className={`text-[10px] mt-1 font-mono relative z-10 ${
-              isActive ? 'text-slate-300' : isPassed ? 'text-slate-500' : 'text-slate-600'
-            }`}>
+            <p
+              className={`text-[10px] mt-1 font-mono relative z-10 ${
+                isActive ? 'text-[#F8FAFC]' : isPassed ? 'text-[#94A3B8]' : 'text-[#64748B]'
+              }`}
+            >
               {node.detail.length > 45 ? node.detail.slice(0, 42) + '...' : node.detail}
             </p>
           )}
@@ -305,10 +265,14 @@ const AttackNode = ({ node, index, isActive, isPassed, isLast, variant }: {
   );
 };
 
-// ─── ATTACK PACKET ──────────────────────────────────────
-
-const AttackPacket = ({ progress, variant, blocked }: {
-  progress: number; variant: 'before' | 'after'; blocked: boolean;
+const AttackPacket = ({
+  progress,
+  variant,
+  blocked,
+}: {
+  progress: number;
+  variant: 'before' | 'after';
+  blocked: boolean;
 }) => {
   if (blocked && variant === 'after') {
     return (
@@ -319,15 +283,14 @@ const AttackPacket = ({ progress, variant, blocked }: {
         animate={{ scale: 0, opacity: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Explosion particles */}
         {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1.5 h-1.5 bg-red-500 rounded-full"
+            className="absolute w-1.5 h-1.5 bg-[#F05B68] rounded-full"
             initial={{ x: 0, y: 0, opacity: 1 }}
             animate={{
-              x: Math.cos(i * Math.PI / 4) * 30,
-              y: Math.sin(i * Math.PI / 4) * 30,
+              x: Math.cos((i * Math.PI) / 4) * 30,
+              y: Math.sin((i * Math.PI) / 4) * 30,
               opacity: 0,
               scale: 0,
             }}
@@ -350,9 +313,9 @@ const AttackPacket = ({ progress, variant, blocked }: {
         animate={{ scale: [1, 1.3, 1] }}
         transition={{ duration: 0.8, repeat: Infinity }}
       >
-        <div className="w-4 h-4 rounded-full bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8),0_0_30px_rgba(239,68,68,0.4)]" />
+        <div className="w-4 h-4 rounded-full bg-[#F05B68] shadow-[0_0_15px_rgba(240,91,104,0.8),0_0_30px_rgba(240,91,104,0.4)]" />
         <motion.div
-          className="absolute inset-0 rounded-full bg-red-400"
+          className="absolute inset-0 rounded-full bg-[#F05B68]"
           animate={{ scale: [1, 2.5], opacity: [0.6, 0] }}
           transition={{ duration: 1, repeat: Infinity }}
         />
@@ -360,8 +323,6 @@ const AttackPacket = ({ progress, variant, blocked }: {
     </motion.div>
   );
 };
-
-// ─── SHIELD ANIMATION ───────────────────────────────────
 
 const ShieldAnimation = ({ visible }: { visible: boolean }) => {
   if (!visible) return null;
@@ -378,25 +339,26 @@ const ShieldAnimation = ({ visible }: { visible: boolean }) => {
         animate={{ scale: [1, 1.1, 1] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
-        {/* Outer glow */}
         <motion.div
-          className="absolute inset-0 rounded-full bg-emerald-500/20"
+          className="absolute inset-0 rounded-full bg-[#18E6A8]/20"
           style={{ width: 80, height: 80, marginLeft: -16, marginTop: -16 }}
           animate={{ scale: [1, 1.5], opacity: [0.4, 0] }}
           transition={{ duration: 1.5, repeat: Infinity }}
         />
-        {/* Shield icon */}
-        <div className="w-12 h-12 rounded-full bg-emerald-500/20 border-2 border-emerald-500/60 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.5)]">
-          <Shield className="w-6 h-6 text-emerald-400" />
+        <div className="w-12 h-12 rounded-2xl bg-[#18E6A8]/20 border-2 border-[#18E6A8] flex items-center justify-center shadow-[0_0_30px_rgba(24,230,168,0.5)]">
+          <Shield className="w-6 h-6 text-[#18E6A8]" />
         </div>
       </motion.div>
     </motion.div>
   );
 };
 
-// ─── FLOW PANEL ─────────────────────────────────────────
-
-const FlowPanel = ({ nodes, variant, isPlaying, onComplete }: {
+const FlowPanel = ({
+  nodes,
+  variant,
+  isPlaying,
+  onComplete,
+}: {
   nodes: SimulationNode[];
   variant: 'before' | 'after';
   isPlaying: boolean;
@@ -427,63 +389,61 @@ const FlowPanel = ({ nodes, variant, isPlaying, onComplete }: {
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     nodes.forEach((_, i) => {
-      timers.push(setTimeout(() => {
-        setActiveIdx(i);
+      timers.push(
+        setTimeout(() => {
+          setActiveIdx(i);
 
-        if (variant === 'after' && i === shieldIdx) {
-          setTimeout(() => {
-            setShowShield(true);
-            setBlocked(true);
+          if (variant === 'after' && i === shieldIdx) {
+            setTimeout(() => {
+              setShowShield(true);
+              setBlocked(true);
+              setTimeout(() => {
+                setShowResult(true);
+                onComplete();
+              }, 800);
+            }, 400);
+          } else if (variant === 'before' && i === lastIdx) {
             setTimeout(() => {
               setShowResult(true);
               onComplete();
-            }, 800);
-          }, 400);
-        } else if (variant === 'before' && i === lastIdx) {
-          setTimeout(() => {
-            setShowResult(true);
-            onComplete();
-          }, 600);
-        }
-      }, (i + 1) * 700));
+            }, 600);
+          }
+        }, (i + 1) * 700)
+      );
     });
 
     return () => timers.forEach(clearTimeout);
   }, [isPlaying]);
 
-  const packetProgress = activeIdx < 0
-    ? 0
-    : (activeIdx / Math.max(totalNodes - 1, 1)) * 85 + 6;
+  const packetProgress =
+    activeIdx < 0 ? 0 : (activeIdx / Math.max(totalNodes - 1, 1)) * 85 + 6;
 
   const isBeforeSuccess = variant === 'before';
 
   return (
-    <div className="flex-1 min-w-0">
-      {/* Header */}
-      <div className={`text-center mb-4 pb-3 border-b ${
-        isBeforeSuccess ? 'border-red-500/20' : 'border-emerald-500/20'
-      }`}>
-        <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
-          isBeforeSuccess ? 'text-red-400' : 'text-emerald-400'
-        }`}>
+    <div className="flex-1 min-w-0 font-sans">
+      <div
+        className={`text-center mb-4 pb-3 border-b ${
+          isBeforeSuccess ? 'border-[#F05B68]/20' : 'border-[#18E6A8]/20'
+        }`}
+      >
+        <span
+          className={`text-[10px] font-mono font-bold uppercase tracking-[0.2em] ${
+            isBeforeSuccess ? 'text-[#F05B68]' : 'text-[#18E6A8]'
+          }`}
+        >
           {isBeforeSuccess ? '⚠ Before Patch' : '✓ After Patch'}
         </span>
       </div>
 
-      {/* Flow */}
       <div className="relative flex flex-col items-center gap-2 py-4 min-h-[380px]">
-        {/* Attack packet */}
         {isPlaying && activeIdx >= 0 && !blocked && (
           <AttackPacket progress={packetProgress} variant={variant} blocked={false} />
         )}
-        {blocked && (
-          <AttackPacket progress={packetProgress} variant={variant} blocked={true} />
-        )}
+        {blocked && <AttackPacket progress={packetProgress} variant={variant} blocked={true} />}
 
-        {/* Shield */}
         {variant === 'after' && <ShieldAnimation visible={showShield} />}
 
-        {/* Nodes */}
         {nodes.map((node, i) => (
           <div key={i} className="flex flex-col items-center">
             <AttackNode
@@ -494,7 +454,6 @@ const FlowPanel = ({ nodes, variant, isPlaying, onComplete }: {
               isLast={i === lastIdx}
               variant={variant}
             />
-            {/* Arrow */}
             {i < lastIdx && (
               <motion.div
                 className="flex flex-col items-center my-1"
@@ -503,35 +462,38 @@ const FlowPanel = ({ nodes, variant, isPlaying, onComplete }: {
                   opacity: activeIdx >= i ? 1 : 0.3,
                 }}
               >
-                <div className={`w-0.5 h-4 ${
-                  activeIdx >= i
-                    ? variant === 'after' && i >= lastIdx - 1
-                      ? 'bg-emerald-500/50'
-                      : 'bg-red-500/50'
-                    : 'bg-slate-700'
-                }`} />
-                <div className={`w-0 h-0 border-l-[4px] border-r-[4px] border-t-[5px] border-l-transparent border-r-transparent ${
-                  activeIdx >= i
-                    ? variant === 'after' && i >= lastIdx - 1
-                      ? 'border-t-emerald-500/50'
-                      : 'border-t-red-500/50'
-                    : 'border-t-slate-700'
-                }`} />
+                <div
+                  className={`w-0.5 h-4 ${
+                    activeIdx >= i
+                      ? variant === 'after' && i >= lastIdx - 1
+                        ? 'bg-[#18E6A8]/60'
+                        : 'bg-[#F05B68]/60'
+                      : 'bg-[#151E2D]'
+                  }`}
+                />
+                <div
+                  className={`w-0 h-0 border-l-[4px] border-r-[4px] border-t-[5px] border-l-transparent border-r-transparent ${
+                    activeIdx >= i
+                      ? variant === 'after' && i >= lastIdx - 1
+                        ? 'border-t-[#18E6A8]/60'
+                        : 'border-t-[#F05B68]/60'
+                      : 'border-t-[#151E2D]'
+                  }`}
+                />
               </motion.div>
             )}
           </div>
         ))}
 
-        {/* Result label */}
         <AnimatePresence>
           {showResult && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className={`mt-3 px-5 py-2.5 rounded-xl text-sm font-bold ${
+              className={`mt-3 px-5 py-2.5 rounded-xl text-xs font-mono font-bold ${
                 isBeforeSuccess
-                  ? 'bg-red-500/15 text-red-400 border border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
-                  : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                  ? 'bg-[#F05B68]/15 text-[#F05B68] border border-[#F05B68]/30 shadow-[0_0_20px_rgba(240,91,104,0.2)]'
+                  : 'bg-[#18E6A8]/15 text-[#18E6A8] border border-[#18E6A8]/30 shadow-[0_0_20px_rgba(24,230,168,0.2)]'
               }`}
             >
               {isBeforeSuccess ? '✗ Attack Successful' : '✓ Attack Blocked'}
@@ -543,10 +505,18 @@ const FlowPanel = ({ nodes, variant, isPlaying, onComplete }: {
   );
 };
 
-// ─── ANIMATED COUNTER ───────────────────────────────────
-
-const AnimatedCounter = ({ from, to, duration = 1.5, suffix = '', delay = 0 }: {
-  from: number; to: number; duration?: number; suffix?: string; delay?: number;
+const AnimatedCounter = ({
+  from,
+  to,
+  duration = 1.5,
+  suffix = '',
+  delay = 0,
+}: {
+  from: number;
+  to: number;
+  duration?: number;
+  suffix?: string;
+  delay?: number;
 }) => {
   const [value, setValue] = useState(from);
 
@@ -566,34 +536,60 @@ const AnimatedCounter = ({ from, to, duration = 1.5, suffix = '', delay = 0 }: {
     return () => clearTimeout(timer);
   }, [from, to, duration, delay]);
 
-  return <span>{value}{suffix}</span>;
+  return (
+    <span>
+      {value}
+      {suffix}
+    </span>
+  );
 };
 
-// ─── METRIC CARD ────────────────────────────────────────
-
-const MetricCard = ({ icon: Icon, label, fromValue, toValue, fromLabel, toLabel, fromColor, toColor, delay, suffix = '' }: {
-  icon: any; label: string;
-  fromValue?: number; toValue?: number;
-  fromLabel?: string; toLabel?: string;
-  fromColor: string; toColor: string;
-  delay: number; suffix?: string;
+const MetricCard = ({
+  icon: Icon,
+  label,
+  fromValue,
+  toValue,
+  fromLabel,
+  toLabel,
+  fromColor,
+  toColor,
+  delay,
+  suffix = '',
+}: {
+  icon: any;
+  label: string;
+  fromValue?: number;
+  toValue?: number;
+  fromLabel?: string;
+  toLabel?: string;
+  fromColor: string;
+  toColor: string;
+  delay: number;
+  suffix?: string;
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
+    initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex flex-col"
+    whileHover={{ y: -3, transition: { duration: 0.2 } }}
+    className="bg-[#111827] border border-white/[0.08] hover:border-[#18E6A8]/30 rounded-2xl p-4 flex flex-col transition-all duration-200"
   >
     <div className="flex items-center gap-2 mb-3">
-      <Icon className="h-4 w-4 text-slate-500" />
-      <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">{label}</span>
+      <Icon className="h-4 w-4 text-[#18E6A8]" />
+      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#94A3B8]">
+        {label}
+      </span>
     </div>
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between font-mono">
       <div className="text-center">
         <p className={`text-xl font-bold ${fromColor}`}>
-          {fromValue !== undefined ? <AnimatedCounter from={0} to={fromValue} delay={delay} suffix={suffix} /> : fromLabel}
+          {fromValue !== undefined ? (
+            <AnimatedCounter from={0} to={fromValue} delay={delay} suffix={suffix} />
+          ) : (
+            fromLabel
+          )}
         </p>
-        <p className="text-[9px] text-slate-600 uppercase mt-0.5">Before</p>
+        <p className="text-[9px] text-[#94A3B8] uppercase mt-0.5 font-bold">Before</p>
       </div>
       <motion.div
         className="flex-1 mx-3 flex items-center justify-center"
@@ -601,20 +597,22 @@ const MetricCard = ({ icon: Icon, label, fromValue, toValue, fromLabel, toLabel,
         animate={{ opacity: 1 }}
         transition={{ delay: delay + 0.5 }}
       >
-        <div className="w-full h-px bg-gradient-to-r from-red-500/40 via-slate-700 to-emerald-500/40" />
-        <TrendingDown className="h-3.5 w-3.5 text-emerald-500 -ml-1 shrink-0" />
+        <div className="w-full h-px bg-gradient-to-r from-[#F05B68]/40 via-white/[0.08] to-[#18E6A8]/40" />
+        <TrendingDown className="h-3.5 w-3.5 text-[#18E6A8] -ml-1 shrink-0" />
       </motion.div>
       <div className="text-center">
         <p className={`text-xl font-bold ${toColor}`}>
-          {toValue !== undefined ? <AnimatedCounter from={fromValue || 100} to={toValue} delay={delay + 0.8} suffix={suffix} /> : toLabel}
+          {toValue !== undefined ? (
+            <AnimatedCounter from={fromValue || 100} to={toValue} delay={delay + 0.8} suffix={suffix} />
+          ) : (
+            toLabel
+          )}
         </p>
-        <p className="text-[9px] text-slate-600 uppercase mt-0.5">After</p>
+        <p className="text-[9px] text-[#94A3B8] uppercase mt-0.5 font-bold">After</p>
       </div>
     </div>
   </motion.div>
 );
-
-// ─── MAIN TAB COMPONENT ─────────────────────────────────
 
 interface AttackSimulationTabProps {
   vuln: Vulnerability;
@@ -636,20 +634,19 @@ export const AttackSimulationTab = ({ vuln, patch }: AttackSimulationTabProps) =
     setTimeout(() => setIsPlaying(true), 100);
   }, []);
 
-  // Auto-play on mount
   useEffect(() => {
-    const timer = setTimeout(() => setIsPlaying(true), 500);
+    const timer = setTimeout(() => setIsPlaying(true), 400);
     return () => clearTimeout(timer);
   }, [vuln.id]);
 
   useEffect(() => {
     if (beforeDone && afterDone) {
-      setTimeout(() => setShowMetrics(true), 400);
+      setTimeout(() => setShowMetrics(true), 300);
     }
   }, [beforeDone, afterDone]);
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-5xl mx-auto custom-scrollbar pb-24">
+    <div className="p-6 md:p-8 space-y-6 max-w-5xl mx-auto custom-scrollbar pb-24 font-sans text-[#F8FAFC]">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -657,25 +654,29 @@ export const AttackSimulationTab = ({ vuln, patch }: AttackSimulationTabProps) =
         className="flex items-center justify-between"
       >
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20">
-            <Target className="h-6 w-6 text-red-400" />
+          <div className="p-3 bg-[#F05B68]/10 rounded-2xl border border-[#F05B68]/20">
+            <Target className="h-6 w-6 text-[#F05B68]" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-100">{sim.title} — Attack Simulation</h2>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">{sim.owasp}</span>
-              <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded">{sim.cwe}</span>
-              <span className="text-[10px] text-slate-500">{sim.impact}</span>
+            <h2 className="text-lg font-bold text-[#F8FAFC]">{sim.title} — Attack Simulation</h2>
+            <div className="flex items-center gap-3 mt-1 font-mono text-xs">
+              <span className="text-[#FBBF24] bg-[#FBBF24]/10 px-2.5 py-0.5 rounded-full border border-[#FBBF24]/20 font-bold">
+                {sim.owasp}
+              </span>
+              <span className="text-[#18E6A8] bg-[#18E6A8]/10 px-2.5 py-0.5 rounded-full border border-[#18E6A8]/20 font-bold">
+                {sim.cwe}
+              </span>
+              <span className="text-[#94A3B8]">{sim.impact}</span>
             </div>
           </div>
         </div>
 
         <button
           onClick={handleReplay}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-xs font-mono font-bold rounded-xl bg-[#151E2D] text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#111827] border border-white/[0.08] transition-colors"
         >
-          <Zap className="h-3.5 w-3.5" />
-          Replay
+          <Zap className="h-3.5 w-3.5 text-[#18E6A8]" />
+          Replay Simulation
         </button>
       </motion.div>
 
@@ -684,21 +685,24 @@ export const AttackSimulationTab = ({ vuln, patch }: AttackSimulationTabProps) =
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="bg-red-500/5 border border-red-500/15 rounded-xl px-5 py-3 flex items-center gap-3"
+        className="bg-[#F05B68]/10 border border-[#F05B68]/20 rounded-2xl px-5 py-3 flex items-center gap-3"
       >
-        <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
+        <AlertTriangle className="h-4 w-4 text-[#F05B68] shrink-0" />
         <div>
-          <span className="text-[10px] text-red-400 font-bold uppercase tracking-wider">Malicious Input</span>
-          <p className="text-xs font-mono text-red-300/80 mt-0.5">{sim.malicious_input}</p>
+          <span className="text-[10px] text-[#F05B68] font-mono font-bold uppercase tracking-wider">
+            Malicious Input Payload
+          </span>
+          <p className="text-xs font-mono text-[#F8FAFC] mt-0.5">{sim.malicious_input}</p>
         </div>
       </motion.div>
 
       {/* Side-by-Side Attack Flow */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6"
+        whileHover={{ y: -3, transition: { duration: 0.25 } }}
+        className="bg-[#111827] border border-white/[0.08] hover:border-[#18E6A8]/30 rounded-2xl p-6 shadow-[0_8px_32px_rgba(0,0,0,0.36)] transition-all duration-200"
       >
         <div className="flex gap-6">
           <FlowPanel
@@ -707,7 +711,7 @@ export const AttackSimulationTab = ({ vuln, patch }: AttackSimulationTabProps) =
             isPlaying={isPlaying}
             onComplete={() => setBeforeDone(true)}
           />
-          <div className="w-px bg-slate-800 shrink-0" />
+          <div className="w-px bg-white/[0.08] shrink-0" />
           <FlowPanel
             nodes={sim.after}
             variant="after"
@@ -726,39 +730,58 @@ export const AttackSimulationTab = ({ vuln, patch }: AttackSimulationTabProps) =
             className="grid grid-cols-2 md:grid-cols-3 gap-4"
           >
             <MetricCard
-              icon={Activity} label="Risk Score"
-              fromValue={sim.risk_before} toValue={sim.risk_after}
-              fromColor="text-red-400" toColor="text-emerald-400"
+              icon={Activity}
+              label="Risk Score"
+              fromValue={sim.risk_before}
+              toValue={sim.risk_after}
+              fromColor="text-[#F05B68]"
+              toColor="text-[#18E6A8]"
               delay={0}
             />
             <MetricCard
-              icon={Target} label="Attack Success Rate"
-              fromValue={sim.attack_success_before} toValue={sim.attack_success_after}
-              fromColor="text-red-400" toColor="text-emerald-400"
-              delay={0.1} suffix="%"
+              icon={Target}
+              label="Attack Success Rate"
+              fromValue={sim.attack_success_before}
+              toValue={sim.attack_success_after}
+              fromColor="text-[#F05B68]"
+              toColor="text-[#18E6A8]"
+              delay={0.1}
+              suffix="%"
             />
             <MetricCard
-              icon={AlertTriangle} label="Exploitability"
-              fromLabel="Critical" toLabel="Mitigated"
-              fromColor="text-red-400" toColor="text-emerald-400"
+              icon={AlertTriangle}
+              label="Exploitability"
+              fromLabel="Critical"
+              toLabel="Mitigated"
+              fromColor="text-[#F05B68]"
+              toColor="text-[#18E6A8]"
               delay={0.2}
             />
             <MetricCard
-              icon={Zap} label="Financial Risk"
-              fromLabel="High" toLabel="Low"
-              fromColor="text-amber-400" toColor="text-emerald-400"
+              icon={Zap}
+              label="Financial Risk"
+              fromLabel="High"
+              toLabel="Low"
+              fromColor="text-[#FBBF24]"
+              toColor="text-[#18E6A8]"
               delay={0.3}
             />
             <MetricCard
-              icon={ShieldCheck} label="Validation"
-              fromLabel="—" toLabel="Passed"
-              fromColor="text-slate-500" toColor="text-emerald-400"
+              icon={ShieldCheck}
+              label="Validation"
+              fromLabel="—"
+              toLabel="Passed"
+              fromColor="text-[#64748B]"
+              toColor="text-[#18E6A8]"
               delay={0.4}
             />
             <MetricCard
-              icon={Lock} label="Confidence"
-              fromLabel="—" toLabel="High"
-              fromColor="text-slate-500" toColor="text-emerald-400"
+              icon={Lock}
+              label="Confidence"
+              fromLabel="—"
+              toLabel="High"
+              fromColor="text-[#64748B]"
+              toColor="text-[#18E6A8]"
               delay={0.5}
             />
           </motion.div>

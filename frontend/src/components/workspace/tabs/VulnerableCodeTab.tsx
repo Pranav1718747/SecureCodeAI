@@ -16,54 +16,54 @@ export const VulnerableCodeTab = ({ vuln }: VulnerableCodeTabProps) => {
     setIsLoading(true);
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 600); // 600ms simulated network delay
+    }, 400);
     return () => clearTimeout(timer);
   }, [vuln.id]);
 
   const line = vuln.line_start || 1;
   const endLine = vuln.line_end || line;
   const startLine = vuln.context_line_start || Math.max(1, line - 10);
-  
+
   const displayCode = vuln.code_context || vuln.snippet || 'No code snippet available.';
-  const language = vuln.language || 'python'; // Fallback to python if not specified
+  const language = vuln.language || 'python';
 
   return (
-    <div className="flex flex-col h-full bg-[#1e1e1e]">
+    <div className="flex flex-col h-full bg-[#070B16] rounded-2xl border border-white/[0.08] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.36)] font-mono">
       {/* Editor Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-b border-[#3e3e42]">
-        <div className="flex items-center gap-2">
-          <FileCode className="h-4 w-4 text-[#569cd6]" />
-          <span className="text-sm text-[#cccccc] font-mono">{vuln.file_path}</span>
+      <div className="flex items-center justify-between px-5 py-3 bg-[#151E2D] border-b border-white/[0.08]">
+        <div className="flex items-center gap-2.5">
+          <FileCode className="h-4 w-4 text-[#18E6A8]" />
+          <span className="text-xs text-[#F8FAFC] font-mono font-semibold">{vuln.file_path}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-1.5 text-[#cccccc] hover:bg-[#3e3e42] rounded transition-colors" title="Copy code">
+          <button className="p-1.5 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#111827] rounded-xl border border-white/[0.08] transition-colors" title="Copy code">
             <Copy className="h-3.5 w-3.5" />
           </button>
-          <button className="p-1.5 text-[#cccccc] hover:bg-[#3e3e42] rounded transition-colors" title="Download file">
+          <button className="p-1.5 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#111827] rounded-xl border border-white/[0.08] transition-colors" title="Download file">
             <Download className="h-3.5 w-3.5" />
           </button>
-          <button className="p-1.5 text-[#cccccc] hover:bg-[#3e3e42] rounded transition-colors" title="Fullscreen">
+          <button className="p-1.5 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#111827] rounded-xl border border-white/[0.08] transition-colors" title="Fullscreen">
             <Maximize2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
       {/* Editor Content */}
-      <div className="flex-1 overflow-auto bg-[#1e1e1e] relative">
+      <div className="flex-1 overflow-auto bg-[#070B16] relative custom-scrollbar">
         {isLoading ? (
-          <div className="p-4 w-full h-full">
+          <div className="p-6 w-full h-full">
             <div className="flex items-center gap-3 mb-6">
-              <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-              <span className="text-sm text-slate-400 font-mono">Fetching source code from repository...</span>
+              <Loader2 className="h-5 w-5 text-[#18E6A8] animate-spin" />
+              <span className="text-xs text-[#94A3B8] font-mono">Fetching source code from repository...</span>
             </div>
             {/* Skeleton lines */}
             <div className="space-y-3">
               {[...Array(15)].map((_, i) => (
                 <div key={i} className="flex items-center gap-4">
-                  <div className="w-6 text-right text-[#858585] text-xs font-mono">{startLine + i}</div>
-                  <div 
-                    className="h-4 bg-[#2d2d2d] rounded animate-pulse" 
-                    style={{ width: `${Math.max(20, Math.random() * 80)}%` }} 
+                  <div className="w-6 text-right text-[#64748B] text-xs font-mono">{startLine + i}</div>
+                  <div
+                    className="h-4 bg-[#151E2D] rounded-lg animate-pulse"
+                    style={{ width: `${Math.max(20, Math.random() * 80)}%` }}
                   />
                 </div>
               ))}
@@ -80,16 +80,15 @@ export const VulnerableCodeTab = ({ vuln }: VulnerableCodeTabProps) => {
               margin: 0,
               padding: '16px 0',
               background: 'transparent',
-              fontSize: '14px',
-              lineHeight: '1.5',
-              fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+              fontSize: '13px',
+              lineHeight: '1.6',
+              fontFamily: "'RM Mono', 'JetBrains Mono', Consolas, monospace",
             }}
             lineProps={(lineNumber) => {
               let style: React.CSSProperties = { display: 'block' };
-              // Highlight the specific vulnerable lines based on vuln metadata
               if (lineNumber >= line && lineNumber <= endLine) {
-                style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
-                style.borderLeft = '3px solid #ef4444';
+                style.backgroundColor = 'rgba(240, 91, 104, 0.18)';
+                style.borderLeft = '3px solid #F05B68';
               }
               return { style };
             }}
@@ -98,16 +97,16 @@ export const VulnerableCodeTab = ({ vuln }: VulnerableCodeTabProps) => {
           </SyntaxHighlighter>
         )}
       </div>
-      
+
       {/* Editor Footer */}
-      <div className="flex items-center justify-between px-4 py-1.5 bg-[#007acc] text-white text-xs">
+      <div className="flex items-center justify-between px-5 py-2 bg-[#151E2D] border-t border-white/[0.08] text-[#94A3B8] text-xs font-mono">
         <div className="flex items-center gap-4">
           <span>Ln {line}, Col 1</span>
           <span>UTF-8</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="capitalize">{language}</span>
-          <span>Vulnerable</span>
+          <span className="text-[#F05B68] font-bold">Vulnerable Line</span>
         </div>
       </div>
     </div>
