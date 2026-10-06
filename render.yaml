@@ -81,10 +81,13 @@ services:
   - type: web
     name: securecode-frontend
     env: static
-    region: oregon
-    plan: free
     buildCommand: "cd frontend && npm install && npm run build"
     staticPublishPath: "./frontend/dist"
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: "https://securecode-backend.onrender.com"
+      - key: VITE_WS_HOST
+        value: "securecode-backend.onrender.com"
     headers:
       - path: /*
         name: Cache-Control
