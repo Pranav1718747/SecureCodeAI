@@ -85,9 +85,9 @@ class BaseAgent(ABC):
 
     def __init__(
         self,
-        model_id: str = "llama-3.1-8b-instant",
+        model_id: str = None,
         temperature: float = 0.0,
-        region_name: str = "us-east-1",  # Kept for backward compatibility
+        region_name: str = None,  # Kept for backward compatibility
         max_tokens: int = 4096,
     ) -> None:
         """Initialize BaseAgent with Groq parameters.
@@ -98,7 +98,9 @@ class BaseAgent(ABC):
             region_name: Kept for compatibility.
             max_tokens: Maximum tokens in response.
         """
-        self.model_id = model_id
+        import os
+        self.model_id = model_id or os.environ.get("LLM_MODEL_ID", "llama-3.1-8b-instant")
+        self.region_name = region_name or os.environ.get("AWS_REGION_NAME", "us-east-1")
         self.temperature = temperature
         self.max_tokens = max_tokens
         self._groq_client: Any = None

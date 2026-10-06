@@ -16,12 +16,20 @@ sys.path.append(str(BASE_DIR.parent))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+from django.core.exceptions import ImproperlyConfigured
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "insecure-default-key-for-dev")
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
-DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
+if not DEBUG:
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    if not SECRET_KEY:
+        raise ImproperlyConfigured("SECRET_KEY environment variable is missing in production. Do NOT use default keys.")
+else:
+    SECRET_KEY = os.environ.get("SECRET_KEY", "insecure-default-key-for-dev")
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,backend").split(",")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,backend").split(",") if DEBUG else os.environ.get("ALLOWED_HOSTS", "").split(",")
+if not DEBUG and not any(ALLOWED_HOSTS):
+    raise ImproperlyConfigured("ALLOWED_HOSTS is required in production.")
 
 
 # Application definition
@@ -44,14 +52,7 @@ INSTALLED_APPS = [
     
     # Local domain apps
     'accounts.apps.AccountsConfig',
-    'repositories.apps.RepositoriesConfig',
-    'reviews.apps.ReviewsConfig',
-    'patches.apps.PatchesConfig',
-    'verification.apps.VerificationConfig',
-    'training.apps.TrainingConfig',
-    'evaluation.apps.EvaluationConfig',
-    'monitoring.apps.MonitoringConfig',
-    'api.apps.ApiConfig',
+    'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
@@ -63,8 +64,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'api.middleware.TenantContextMiddleware',
-    'api.middleware.AuditLoggingMiddleware',
+    'core.middleware.TenantContextMiddleware',
+    'core.middleware.AuditLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -98,8 +99,17 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-# Override with Postgres if env vars are present
-if os.environ.get("POSTGRES_DB"):
+# Override with DATABASE_URL or POSTGRES_DB if present
+if os.environ.get("DATABASE_URL"):
+    try:
+        import dj_database_url
+        DATABASES['default'] = dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    except ImportError:
+        pass
+elif os.environ.get("POSTGRES_DB"):
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get("POSTGRES_DB"),
@@ -179,8 +189,16 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
-    # Exception handler will be configured in Phase 3
-    'EXCEPTION_HANDLER': 'api.exceptions.custom_exception_handler',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10/hour',
+        'user': '1000/day',
+        'scan': '5/minute',
+    },
+    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
 }
 
 # --- Simple JWT ---
@@ -194,12 +212,15 @@ SIMPLE_JWT = {
 # --- CORS ---
 CORS_ALLOWED_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS", 
-    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001"
+    "http://localhost:3000,http://127.0.0.1:3000" if DEBUG else ""
 ).split(",")
+if not DEBUG and not any(CORS_ALLOWED_ORIGINS):
+    raise ImproperlyConfigured("CORS_ALLOWED_ORIGINS is required in production.")
 
-# --- Celery ---
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/1")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/2")
+# --- Redis & Celery ---
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
@@ -208,7 +229,7 @@ CELERY_RESULT_SERIALIZER = "json"
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": os.environ.get("REDIS_URL", "redis://localhost:6379/0"),
+        "LOCATION": REDIS_URL,
     }
 }
 
@@ -235,7 +256,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
+            'hosts': [REDIS_URL],
         },
     },
 }

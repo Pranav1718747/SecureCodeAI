@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pip install -r requirements.txt && python backend/manage.py migrate --noinput"
+
+[deploy]
+startCommand = "cd backend && daphne -b 0.0.0.0 -p $PORT config.asgi:application"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 5

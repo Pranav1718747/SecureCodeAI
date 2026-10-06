@@ -1,6 +1,6 @@
 """Deterministic fallback generation for AI Analysis Reports."""
 
-from reviews.models import Vulnerability
+from core.models import Vulnerability
 
 def generate_business_impact(vuln: Vulnerability) -> str:
     title = vuln.title.lower()

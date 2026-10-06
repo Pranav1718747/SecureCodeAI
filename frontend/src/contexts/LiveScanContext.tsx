@@ -79,7 +79,7 @@ export const LiveScanProvider = ({ scanId, children }: { scanId: string, childre
     if (!scanId || !isLive) return;
     
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = '127.0.0.1:8000';
+    const wsHost = import.meta.env.VITE_WS_HOST || '127.0.0.1:8000';
     const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/scans/${scanId}/`);
 
     ws.onmessage = (event) => {

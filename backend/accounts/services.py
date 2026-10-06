@@ -4,7 +4,7 @@ import hashlib
 import secrets
 from django.db import transaction
 from django.utils.text import slugify
-from common.exceptions import InvalidAPIKeyException
+from core.exceptions import InvalidAPIKeyException
 from .models import Organization, User, APIKey
 import django.dispatch
 

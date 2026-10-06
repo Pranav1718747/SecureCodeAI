@@ -1,8 +1,4 @@
-"""URL Configuration for SecureCode AI.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-"""
+"""URL Configuration for SecureCode AI."""
 
 from django.contrib import admin
 from django.urls import path, include
@@ -12,6 +8,7 @@ from django.http import JsonResponse
 
 def health_check(request):
     return JsonResponse({"status": "healthy"})
+
 
 def debug_github(request):
     from config.env import settings, ENV_PATH
@@ -35,7 +32,7 @@ def debug_github(request):
             if response.status_code == 200:
                 github_authenticated = True
                 username = response.json().get('login')
-        except:
+        except Exception:
             pass
 
     return JsonResponse({
@@ -44,7 +41,7 @@ def debug_github(request):
         "token_prefix": token_prefix,
         "github_authenticated": github_authenticated,
         "username": username,
-        "repo_access": github_authenticated  # simplifying for this debug endpoint
+        "repo_access": github_authenticated
     })
 
 
@@ -55,17 +52,13 @@ urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     
-    # Health check
+    # Direct Health check & Debug
     path("api/v1/health/", health_check, name="health-check"),
     path("api/debug/github", debug_github, name="debug-github"),
     
-    # Domain Apps
+    # App 1: Accounts (Auth, Multi-Tenancy, API Keys)
     path("api/v1/accounts/", include("accounts.urls")),
-    path("api/v1/repositories/", include("repositories.urls")),
-    path("api/v1/reviews/", include("reviews.urls")),
-    path("api/v1/patches/", include("patches.urls")),
-    path("api/v1/verification/", include("verification.urls")),
-    path("api/v1/training/", include("training.urls")),
-    path("api/v1/evaluation/", include("evaluation.urls")),
-    path("api/v1/monitoring/", include("monitoring.urls")),
+    
+    # App 2: Core Engine (Repositories, Scans, Vulnerabilities, Patches, Verification, Monitoring, Training, Eval)
+    path("api/v1/", include("core.urls")),
 ]

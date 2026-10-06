@@ -37,7 +37,7 @@ class StreamAgent:
             return
             
         try:
-            from reviews.models import Scan, Vulnerability
+            from core.models import Scan, Vulnerability
             from channels.layers import get_channel_layer
             from django.db.models import F
             

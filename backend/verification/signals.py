@@ -1,1 +1,0 @@
-"""Signals for Verification app."""

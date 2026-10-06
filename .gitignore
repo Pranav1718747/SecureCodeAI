@@ -67,3 +67,5 @@ ai/training/checkpoints/
 # Docker & Temp
 .docker/
 .firecrawl/
+*.rdb
+*.rdb.bak

@@ -2,7 +2,7 @@
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from common.models import TimeStampedModel
+from core.base_models import TimeStampedModel
 
 
 class Organization(TimeStampedModel):

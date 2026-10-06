@@ -2,8 +2,8 @@ import pytest
 import asyncio
 from django.test import override_settings
 from accounts.models import Organization, User
-from repositories.models import Repository, ZipUpload
-from repositories.tasks import extract_zip_upload_task
+from core.models import Repository, ZipUpload
+from core.tasks import extract_zip_upload_task
 
 @pytest.fixture
 def repo_setup():
