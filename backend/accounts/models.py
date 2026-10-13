@@ -8,7 +8,7 @@ from core.base_models import TimeStampedModel
 class Organization(TimeStampedModel):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
-    domain = models.CharField(max_length=255, unique=True)
+    domain = models.CharField(max_length=255, unique=True, null=True, blank=True)
     subscription_plan = models.CharField(
         max_length=50, 
         default="ENTERPRISE_TRIAL",
@@ -22,6 +22,11 @@ class Organization(TimeStampedModel):
     is_active = models.BooleanField(default=True)
     sso_enabled = models.BooleanField(default=False)
     sso_saml_config = models.JSONField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.domain:
+            self.domain = f"{self.slug or 'org'}-{str(self.id)[:8]}.example.com"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
