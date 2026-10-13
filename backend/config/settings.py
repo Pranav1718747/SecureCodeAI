@@ -225,13 +225,14 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 
-# --- Cache ---
+# --- Cache (In-Memory for fast, zero-latency throttles and API sessions) ---
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": REDIS_URL,
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "securecode-ai-cache",
     }
 }
+
 
 # --- Spectacular (Swagger/OpenAPI) ---
 SPECTACULAR_SETTINGS = {
