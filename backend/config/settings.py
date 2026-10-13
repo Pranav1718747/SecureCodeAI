@@ -261,3 +261,17 @@ CHANNEL_LAYERS = {
     },
 }
 
+# In-memory fallbacks during tests or CI without Redis
+TESTING = 'test' in sys.argv or 'pytest' in sys.modules or os.environ.get("CI") == "true"
+if TESTING:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+
