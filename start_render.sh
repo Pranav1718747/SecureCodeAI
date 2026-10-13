@@ -8,7 +8,7 @@ echo "==> Seeding initial user credentials..."
 python scripts/seed_db.py || true
 
 echo "==> Starting Celery worker in background..."
-(cd backend && celery -A config worker -l INFO --concurrency=2) &
+(cd backend && celery -A config worker -l INFO --concurrency=1) &
 
 echo "==> Starting Daphne ASGI server on port ${PORT:-8000}..."
 cd backend
