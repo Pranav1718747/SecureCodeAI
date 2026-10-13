@@ -56,9 +56,9 @@ services:
     staticPublishPath: "./frontend/dist"
     envVars:
       - key: VITE_API_BASE_URL
-        value: "https://securecode-backend.onrender.com"
+        value: "https://securecode-backend-jlf1.onrender.com"
       - key: VITE_WS_HOST
-        value: "securecode-backend.onrender.com"
+        value: "securecode-backend-jlf1.onrender.com"
     headers:
       - path: /*
         name: Cache-Control

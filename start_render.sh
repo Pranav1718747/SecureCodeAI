@@ -4,6 +4,9 @@ set -e
 echo "==> Running database migrations..."
 python backend/manage.py migrate --noinput
 
+echo "==> Seeding initial user credentials..."
+python scripts/seed_db.py || true
+
 echo "==> Starting Celery worker in background..."
 (cd backend && celery -A config worker -l INFO --concurrency=2) &
 
