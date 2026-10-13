@@ -69,3 +69,4 @@ ai/training/checkpoints/
 .firecrawl/
 *.rdb
 *.rdb.bak
+test_ws/

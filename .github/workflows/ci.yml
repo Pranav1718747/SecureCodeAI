@@ -20,8 +20,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run Backend Tests
+        env:
+          DEBUG: "True"
+          SECRET_KEY: "ci-insecure-secret-key-for-testing"
+          ALLOWED_HOSTS: "localhost,127.0.0.1"
+          GROQ_API_KEY: "dummy-groq-key-for-testing"
+          PYTHONPATH: ".:backend"
         run: |
-          pytest backend/
+          python backend/manage.py test core accounts
+          pytest
 
   frontend-tests:
     runs-on: ubuntu-latest
